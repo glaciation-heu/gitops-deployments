@@ -26,15 +26,15 @@ spec:
           enabled: false
         
         kubernetes-event-exporter:
-            receivers:
-            - name: "dump"
-              stdout:
-                deDot: true
-            - name: "loki"
-              loki:
-                streamLabels:
-                  stream: kube-events
-                url: http://monitoring-stack-loki:3100/loki/api/v1/push
+          receivers:
+          - name: "dump"
+            stdout:
+              deDot: true
+          - name: "loki"
+            loki:
+              streamLabels:
+                stream: kube-events
+              url: http://monitoring-stack-loki:3100/loki/api/v1/push
 
         grafana:
           adminPassword: donkeyhot

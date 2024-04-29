@@ -1,0 +1,9 @@
+{
+    "email": "glaciation-hiro@hiro-microdatacenters.nl",
+    "name": "read_only",
+    "login": "read_only",
+    "password":"read_only",
+    "orgId": 1,
+    "isGrafanaAdmin": false,
+    "authLabels": []
+}

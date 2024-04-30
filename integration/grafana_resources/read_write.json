@@ -1,0 +1,9 @@
+{
+    "name": "read_write",
+    "login": "read_write",
+    "password":"read_write",
+    "orgId": 1,
+    "isGrafanaAdmin": false,
+    "authLabels": []
+}
+

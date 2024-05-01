@@ -22,8 +22,19 @@ spec:
         prometheus:
           server:
             remoteWrite: []
+        telegraf:
+          config:
+            outputs:      
+              - influxdb_v2:
+                  urls:
+                    - "http://monitoring-stack-influxdb2"
+                  token: encrypted
+                  organization: "influxdata"
+                  bucket: "prometheus"            
+                  timeout: "10s"
+
         influxdb:
-          enabled: false
+          enabled: true
         
         kubernetes-event-exporter:
           config:

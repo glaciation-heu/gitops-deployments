@@ -22,8 +22,8 @@ spec:
         telegraf:
           config:
             agent:
-              metric_batch_size: 1000
-              metric_buffer_limit: 20000
+              metric_batch_size: 5000
+              metric_buffer_limit: 30000
             outputs:      
               - influxdb_v2:
                   urls:
@@ -32,8 +32,8 @@ spec:
                   organization: "influxdata"
                   bucket: "prometheus"            
                   timeout: "10s"
-                  metric_batch_size: 1000  
-                  metric_buffer_limit: 20000
+                  metric_batch_size: 5000  
+                  metric_buffer_limit: 30000
 
         influxdb:
           enabled: true

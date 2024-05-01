@@ -19,11 +19,24 @@ spec:
     helm:
       valuesObject:
 
-        prometheus:
-          server:
-            remoteWrite: []
+        telegraf:
+          config:
+            agent:
+              metric_batch_size: 5000
+              metric_buffer_limit: 30000
+            outputs:      
+              - influxdb_v2:
+                  urls:
+                    - "http://monitoring-stack-influxdb2"
+                  token: encrypted
+                  organization: "influxdata"
+                  bucket: "prometheus"            
+                  timeout: "10s"
+                  metric_batch_size: 5000  
+                  metric_buffer_limit: 30000
+
         influxdb:
-          enabled: false
+          enabled: true
         
         kubernetes-event-exporter:
           config:

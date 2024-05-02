@@ -34,7 +34,7 @@ spec:
               metric_buffer_limit: 20000
               interval: "5s"
               flush_interval: "5s"
-              debug: "true"
+              debug: true
             outputs:      
               - influxdb_v2:
                   urls:

@@ -20,6 +20,14 @@ spec:
       valuesObject:
 
         telegraf:
+          resources:
+            requests:
+              memory: 1Gi
+              cpu: 1
+            limits:
+              memory: 1Gi
+              cpu: 1
+
           config:
             agent:
               metric_batch_size: 2000

@@ -30,9 +30,10 @@ spec:
 
           config:
             agent:
-              metric_batch_size: 2000
+              metric_batch_size: 20000
               metric_buffer_limit: 20000
-              interval: "60s"
+              interval: "10s"
+              flush_interval: "10s"
             outputs:      
               - influxdb_v2:
                   urls:
@@ -41,7 +42,7 @@ spec:
                   organization: "influxdata"
                   bucket: "prometheus"            
                   timeout: "30s"
-                  metric_batch_size: 2000  
+                  metric_batch_size: 20000
                   metric_buffer_limit: 20000
 
         influxdb:

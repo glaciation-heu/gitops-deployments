@@ -14,4 +14,6 @@
 | grafana | http://grafana.integration/ |
 | gatekeeper policy manager UI | http://gpm.integration/ |
 | Argo CD | http://argocd.integration/ |
+| MinIO Glaciation Tenant API | http://glaciation-tenant.integration/ |
+| MinIO Glaciation Tenant Console | http://glaciation-tenant-console.integration/ |
 

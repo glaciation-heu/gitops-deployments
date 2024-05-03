@@ -286,7 +286,7 @@ spec:
             externalCertSecret: [ ]
             ###
             # Enable automatic Kubernetes based `certificate generation and signing <https://kubernetes.io/docs/tasks/tls/managing-tls-in-a-cluster>`__
-            requestAutoCert: true
+            requestAutoCert: false
             ###
             # This field is used only when ``requestAutoCert: true``.
             # Use this field to set CommonName for the auto-generated certificate. 
@@ -496,21 +496,21 @@ spec:
         # Set the keys to conform to the Ingress controller and configuration of your choice.
         ingress:
           api:
-            enabled: false
+            enabled: true
             ingressClassName: "nginx"
             labels: { }
             annotations: { }
             tls: [ ]
-            host: minio.integration
+            host: glaciation-tenant.integration
             path: /
             pathType: Prefix
           console:
-            enabled: false
+            enabled: true
             ingressClassName: "nginx"
             labels: { }
             annotations: { }
             tls: [ ]
-            host: glaciation-minio-console.integration
+            host: glaciation-tenant-console.integration
             path: /
             pathType: Prefix
         # Use an extraResources template section to include additional Kubernetes resources

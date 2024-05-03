@@ -13,4 +13,5 @@
 | ---     | --- |
 | grafana | http://grafana.integration/ |
 | gatekeeper policy manager UI | http://gpm.integration/ |
+| Argo CD | http://argocd.integration/ |
 

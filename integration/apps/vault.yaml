@@ -7,6 +7,16 @@ metadata:
   labels:
     create-ca-bundle: "true"
 ---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: minio-kes-secret
+  namespace: vault
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+    replicator.v1.mittwald.de/replicate-from: minio-tenant/minio-kes-secret
+data: {}
+---
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:

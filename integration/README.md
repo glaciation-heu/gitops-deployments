@@ -16,4 +16,5 @@
 | Argo CD | http://argocd.integration/ |
 | MinIO Glaciation Tenant API | http://glaciation-tenant.integration/ |
 | MinIO Glaciation Tenant Console | http://glaciation-tenant-console.integration/ |
-
+| Data sanitization API | http://data-sanitization.integration/ |
+| Spark history server UI | http://spark-history-server.integration/ |

@@ -9,3 +9,4 @@ The diagram shows how CI/CD works in GLACIATION project.
 ![image](docs/process_diagram.svg)
 
 A reference example of application repository is [glaciation-metadata-service](https://github.com/glaciation-heu/glaciation-metadata-service).
+.

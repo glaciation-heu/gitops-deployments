@@ -2,7 +2,7 @@
 
 This repository contains GitOps definitions for GLACIATION project.
 
-At the moment only Integration cluster is defined, but later we may add more and clusters. More details about Integration cluster are available in [integration/README.md](integration/README.md). 
+At the moment only Integration cluster is defined, but later we may add more clusters. More details about Integration cluster are available in [integration/README.md](integration/README.md). 
 
 The diagram shows how CI/CD works in GLACIATION project.
 

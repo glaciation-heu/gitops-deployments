@@ -4,16 +4,9 @@
 
 | Service                         | URL                                           |
 |---------------------------------|-----------------------------------------------|
-| ArgoCD                          | http://argocd.integration/                    |
-| Data sanitization API           | http://data-sanitization.integration/         |
-| Gatekeeper Policy Manager UI    | http://gpm.integration/                       |
-| Grafana                         | http://grafana.integration/                   |
-| Metadata service                | http://metadata.integration /                 |
-| MinIO Glaciation Tenant API     | http://glaciation-tenant.integration/         |
-| MinIO Glaciation Tenant Console | http://glaciation-tenant-console.integration/ |
-| Prometheus                      | http://prometheus.integration                 |
-| Spark history server UI         | http://spark-history-server.integration/      |
-| Vault UI                        | https://vault.integration/                    |
+| ArgoCD                          | http://argocd.uc2/                            |
+| Metadata Service                | http://metadata.uc2/                          |
+
 
 ## How to connect
 
@@ -26,16 +19,8 @@ Get a VPN access to the cluster from Dell. There is no direct connectivity witho
 Our Kubernetes cluster has no DNS set up yet. To override it, add to your [hosts file](https://en.wikipedia.org/wiki/Hosts_(file)) the following configurations:
 
 ```
-10.14.1.160 argocd.integration
-10.14.1.160 data-sanitization.integration
-10.14.1.160 glaciation-tenant-console.integration
-10.14.1.160 glaciation-tenant.integration
-10.14.1.160 gpm.integration
-10.14.1.160 grafana.integration 
-10.14.1.160 metadata.integration
-10.14.1.160 prometheus.integration
-10.14.1.160 spark-history-server.integration
-10.14.1.160 vault.integration
+10.14.2.5 argocd.uc2
+10.14.2.5 metadata.uc2
 ```
 
 ## Initial configuration

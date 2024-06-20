@@ -1,22 +1,19 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: local-path-storage
+  name: ui-gateway
   namespace: argocd
-  annotations:
-    argocd.argoproj.io/compare-options: ServerSideDiff=true  
-    argocd.argoproj.io/sync-wave: "-1"
   finalizers:
   - resources-finalizer.argocd.argoproj.io
 spec:
   destination:
-    namespace: default
+    namespace: dkg-engine
     server: https://kubernetes.default.svc
   project: default
   source:
-    repoURL: https://github.com/glaciation-heu/gitops-deployments
-    path: integration/apps/local-path-storage
-    targetRevision: HEAD
+    repoURL: https://glaciation-heu.github.io/ui_gateway/helm-charts
+    chart: ui-gateway-server
+    targetRevision: 0.*.*
   syncPolicy:
     automated:
      prune: true
@@ -24,3 +21,4 @@ spec:
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true
+

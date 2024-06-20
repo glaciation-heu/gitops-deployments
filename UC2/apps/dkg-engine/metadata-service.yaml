@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: kg-exporter
+  name: metadata-service
   namespace: argocd
   finalizers:
   - resources-finalizer.argocd.argoproj.io
@@ -11,13 +11,12 @@ spec:
     server: https://kubernetes.default.svc
   project: default
   source:
-    repoURL: https://glaciation-heu.github.io/kg_exporter/helm-charts/
-    chart: kg-exporter
+    repoURL: https://glaciation-heu.github.io/glaciation-metadata-service/helm-charts/
+    chart: metadata-service
     targetRevision: 0.*.*
     helm:
       valuesObject:
-        settings:
-          metadata_service_url: "http://metadata-service/api/v0/graph"
+        ingressHostName: metadata.uc2
   syncPolicy:
     automated:
      prune: true

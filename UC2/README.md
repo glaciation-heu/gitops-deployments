@@ -45,3 +45,4 @@ How to install ArgoCD.
    $ kubectl apply -f "argocd-*.yaml" -n=argocd
    ```
 3. Use *.yaml as App-of-Apps configurations.
+.

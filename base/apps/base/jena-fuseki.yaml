@@ -23,10 +23,10 @@ spec:
         resources:
           limits:
             cpu: 500m
-            memory: 3G
+            memory: 4G
           requests:
             cpu: 500m
-            memory: 3G
+            memory: 4G
         persistence:
           size: 30Gi
   syncPolicy:

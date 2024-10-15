@@ -848,7 +848,7 @@ spec:
       valuesObject:
         ingressHostName: jena-fuseki.integration
         persistence:
-          size: 30Gi
+          size: 100Gi
         resources:
           limits:
             cpu: 500m

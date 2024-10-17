@@ -1029,9 +1029,74 @@ spec:
           timeoutSeconds: 5
         settings:
           builder:
-            builder_tick_seconds: 60
+            builder_tick_seconds: 600
             is_single_slice: true
             node_port: 80
+            queries:
+              node_queries:
+              - measurement_id: Energy.Usage
+                property: Energy.Usage
+                query: |
+                  label_replace(
+                    irate(kepler_node_platform_joules_total[10m] @{{now}}),
+                    "resource",
+                    "$1",
+                    "exported_instance",
+                    "(.+)"
+                  )
+                result_parser: PROMETHEUS_PARSER
+                source: Kepler
+                unit: milliwatts
+              - aggregation:
+                  function: average
+                  period_seconds: 600
+                measurement_id: Available
+                property: CPU.Available
+                query: |
+                  label_replace(
+                    sum(
+                      rate(
+                        node_cpu_seconds_total{mode="idle", service="monitoring-stack-prometheus-node-exporter"}[10m] @{{now}}
+                      )
+                    ) by (node),
+                    "resource",
+                    "$1",
+                    "node",
+                    "(.+)"
+                  )
+                result_parser: PROMETHEUS_PARSER
+                source: NodeExporter
+                subresource: CPU
+                unit: Core
+              - measurement_id: Available
+                property: RAM.Available
+                query: |
+                  label_replace(
+                    node_memory_MemFree_bytes{service="monitoring-stack-prometheus-node-exporter"} @{{now}},
+                    "resource",
+                    "$1",
+                    "node",
+                    "(.+)"
+                  )
+                result_parser: PROMETHEUS_PARSER
+                source: NodeExporter
+                subresource: RAM
+                unit: bytes
+              - measurement_id: Available
+                property: Storage.Available
+                query: |
+                  label_replace(
+                    ephemeral_storage_node_available @{{now}},
+                    "resource",
+                    "$1",
+                    "node_name",
+                    "(.+)"
+                  )
+                result_parser: PROMETHEUS_PARSER
+                source: k8s-ephemeral-storage-metrics
+                subresource: Storage
+                unit: bytes
+              pod_queries: []
             single_slice_url: http://metadata-service:80
           k8s:
             in_cluster: true

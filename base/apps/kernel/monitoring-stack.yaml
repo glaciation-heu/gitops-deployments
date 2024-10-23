@@ -25,6 +25,85 @@ spec:
               ingressClassName: nginx
               hosts:
                 - prometheus.integration
+          extraScrapeConfigs: |
+            - job_name: 'prometheus-node-exporter'
+              kubernetes_sd_configs:
+                - role: endpoints
+              relabel_configs:
+              - source_labels: [__meta_kubernetes_endpoints_name]
+                regex: '.*prometheus-node-exporter'
+                action: keep
+            - job_name: 'idrac-exporter'
+              static_configs:
+                - targets: ['10.14.2.6', '10.14.2.7']
+              relabel_configs:
+                - source_labels: [__address__]
+                  target_label: __param_target
+                - source_labels: [__param_target]
+                  target_label: instance
+                - target_label: __address__
+                  replacement: monitoring-stack-idrac-exporter.monitoring.svc.cluster.local:9348  # The iDrac exporter's real hostname:port.      
+            - job_name: 'prometheus-snmp-exporter'
+              kubernetes_sd_configs:
+                - role: endpoints
+              relabel_configs:
+              - source_labels: [__meta_kubernetes_endpoints_name]
+                regex: '.*prometheus-snmp-exporter'
+                action: keep
+            - job_name: 'dcgm-exporter'
+              kubernetes_sd_configs:
+                - role: endpoints
+              relabel_configs:
+              - source_labels: [__meta_kubernetes_endpoints_name]
+                regex: '.*dcgm-exporter'
+                action: keep
+            - job_name: 'kepler'
+              kubernetes_sd_configs:
+                - role: endpoints
+              relabel_configs:
+              - source_labels: [__meta_kubernetes_endpoints_name]
+                regex: 'kepler'
+                action: keep
+            - job_name: 'k8s-ephemeral-storage-metrics'
+              kubernetes_sd_configs:
+                - role: pod
+              relabel_configs:
+              - source_labels: [__meta_kubernetes_pod_label_app_kubernetes_io_name]
+                action: keep
+                regex: 'k8s-ephemeral-storage-metrics'
+              - source_labels: [__meta_kubernetes_pod_ip]
+                replacement: '${1}:9100'
+                target_label: __address__
+            - job_name: 'snmp-pdus'
+              static_configs:
+                - targets:
+                  - 10.14.2.3  # SNMP device PDU#1.
+                  - 10.14.2.4 # SNMP device PDC#2.
+              metrics_path: /snmp
+              params:
+                auth: [public_v2]
+                module: [apcups]
+              relabel_configs:
+                - source_labels: [__address__]
+                  target_label: __param_target
+                - source_labels: [__param_target]
+                  target_label: instance
+                - target_label: __address__
+                  replacement: monitoring-stack-prometheus-snmp-exporter.monitoring.svc.cluster.local:9116  # The SNMP exporter's real hostname:port.                
+            - job_name: 'ray-head'
+              kubernetes_sd_configs:
+                - role: pod
+              relabel_configs:
+              - source_labels: [__meta_kubernetes_pod_label_app_kubernetes_io_name]
+                action: keep
+                regex: 'ray-cluster-kuberay-head'
+            - job_name: 'ray-worker'
+              kubernetes_sd_configs:
+                - role: pod
+              relabel_configs:
+              - source_labels: [__meta_kubernetes_pod_label_app_kubernetes_io_name]
+                action: keep
+                regex: 'ray-cluster-kuberay-workergroup-worker'
 
         telegraf:
           enabled: false
@@ -79,6 +158,8 @@ spec:
             hosts:
               - grafana.integration
           grafana.ini:
+            security:
+              allow_embedding: true
             auth.anonymous:
               enabled: true
             auth:

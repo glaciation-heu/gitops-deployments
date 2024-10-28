@@ -1,0 +1,38 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: agent-deployment
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/glaciation-heu/gitops-deployments
+    path: bundle/agent
+    targetRevision: deploy
+    directory:
+      recurse: true
+  destination:
+    namespace: argo-cd
+    server: https://kubernetes.default.svc
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+  template:
+    metadata:
+      labels:
+        app: agent
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: cpu-capacity
+                operator: In
+                values:
+                - low  # Target nodes labeled with 'cpu-capacity=low'

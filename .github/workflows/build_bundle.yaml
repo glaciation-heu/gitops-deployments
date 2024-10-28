@@ -21,6 +21,7 @@ jobs:
                 overlay:
                     - 'integration'
                     - 'UC2'
+                    - 'agent'
         steps:
 
         - id: check-branch-exists

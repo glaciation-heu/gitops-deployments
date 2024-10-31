@@ -544,7 +544,15 @@ spec:
     kinds:
       - apiGroups: [""]
         kinds: ["Pod"]
-    excludedNamespaces: ["kube-*", "argocd"]
+    namespace:
+    - cert-manager
+    - gatekeeper-system
+    - minio-operator
+    - minio-tenant
+    - replicator
+    - spark-app
+    - spark-operator
+    - vault
   parameters:
     cpu: "1"
     memory: "4Gi"
@@ -561,7 +569,15 @@ spec:
     kinds:
       - apiGroups: [""]
         kinds: ["Pod"]
-    excludedNamespaces: ["kube-*", "argocd"]
+    namespace:
+    - cert-manager
+    - gatekeeper-system
+    - minio-operator
+    - minio-tenant
+    - replicator
+    - spark-app
+    - spark-operator
+    - vault
   parameters:
     cpu: "2"
     memory: "8Gi"

@@ -3,6 +3,7 @@ kind: Assign
 metadata:
   name: add-container-resource-cpu-requests
   annotations:
+    argocd.argoproj.io/hook: Sync
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
     argocd.argoproj.io/sync-wave: "-30"
 spec:

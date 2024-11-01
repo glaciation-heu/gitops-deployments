@@ -3,6 +3,8 @@ kind: Kustomization
 resources:
   - cert-manager.yaml
   - gatekeeper.yaml
+  - set-multi-tenant-node-filtering.yaml
+  - validate-multi-tenant-node-filtering.yaml
   - setup-ca-and-bundle.yaml
   - trust-manager.yaml
   - vault.yaml

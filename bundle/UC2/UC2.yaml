@@ -848,7 +848,7 @@ spec:
       valuesObject:
         ingressHostName: jena-fuseki.validation
         persistence:
-          size: 100Gi
+          size: 300Gi
         resources:
           limits:
             cpu: 500m
@@ -2182,13 +2182,19 @@ spec:
       containers:
       - args:
         - --url
-        - http://metadata.validation/api/v0/graph
+        - http://metadata-service.dkg-engine.svc.cluster.local/api/v0/graph
         command:
         - python
         - /app/workload_anomaly_detection.py
         image: ghcr.io/glaciation-heu/dell-uc/workload-anomaly-detection:latest
         imagePullPolicy: IfNotPresent
         name: anomaly-detection
+        resources:
+          requests:
+            cpu: "2"
+            ephemeral-storage: 500M
+            memory: 2Gi
+            nvidia.com/gpu: "0"
       nodeSelector:
         kubernetes.io/hostname: glaciation-worker01
       restartPolicy: Never
@@ -2204,13 +2210,19 @@ spec:
       containers:
       - args:
         - --url
-        - http://metadata.validation/api/v0/graph
+        - http://metadata-service.dkg-engine.svc.cluster.local/api/v0/graph
         command:
         - python
         - /app/workload_object_distribution.py
         image: ghcr.io/glaciation-heu/dell-uc/workload_object_distribution:latest
         imagePullPolicy: IfNotPresent
         name: object-distribution
+        resources:
+          requests:
+            cpu: "2"
+            ephemeral-storage: 500M
+            memory: 2Gi
+            nvidia.com/gpu: "0"
       nodeSelector:
         kubernetes.io/hostname: glaciation-worker01
       restartPolicy: Never
@@ -2226,13 +2238,19 @@ spec:
       containers:
       - args:
         - --url
-        - http://metadata.validation/api/v0/graph
+        - http://metadata-service.dkg-engine.svc.cluster.local/api/v0/graph
         command:
         - python
         - workload_operational_efficiency.py
         image: ghcr.io/glaciation-heu/dell-uc/workload_operational_efficiency:latest
         imagePullPolicy: IfNotPresent
         name: operational-efficiency
+        resources:
+          requests:
+            cpu: "2"
+            ephemeral-storage: 500M
+            memory: 2Gi
+            nvidia.com/gpu: "0"
       nodeSelector:
         kubernetes.io/hostname: glaciation-worker01
       restartPolicy: Never

@@ -28,7 +28,7 @@ spec:
             cpu: 500m
             memory: 4G
         persistence:
-          size: 100Gi
+          size: 300Gi
   syncPolicy:
     automated:
      prune: true

@@ -10,8 +10,14 @@ spec:
       - name: object-distribution
         image:  ghcr.io/glaciation-heu/dell-uc/workload_object_distribution:latest # Use the local Docker registry
         imagePullPolicy:  IfNotPresent        
+        resources:
+          requests:
+            memory: "2Gi"
+            cpu: "2"
+            ephemeral-storage: "500M"
+            nvidia.com/gpu: "0"                                                                                                                 
         command: ["python", "/app/workload_object_distribution.py"] 
-        args: ["--url", http://metadata.validation/api/v0/graph] 
+        args: ["--url", "http://metadata-service.dkg-engine.svc.cluster.local/api/v0/graph"] 
       restartPolicy: Never
       nodeSelector:
         kubernetes.io/hostname: glaciation-worker01

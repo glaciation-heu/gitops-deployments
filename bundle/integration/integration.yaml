@@ -848,7 +848,7 @@ spec:
       valuesObject:
         ingressHostName: jena-fuseki.integration
         persistence:
-          size: 100Gi
+          size: 300Gi
         resources:
           limits:
             cpu: 500m
@@ -2150,6 +2150,12 @@ spec:
         image: ghcr.io/glaciation-heu/dell-uc/workload-anomaly-detection:latest
         imagePullPolicy: IfNotPresent
         name: anomaly-detection
+        resources:
+          requests:
+            cpu: "2"
+            ephemeral-storage: 500M
+            memory: 2Gi
+            nvidia.com/gpu: "0"
       nodeSelector:
         kubernetes.io/hostname: glaciation-testm1w5-worker01
       restartPolicy: Never
@@ -2172,6 +2178,12 @@ spec:
         image: ghcr.io/glaciation-heu/dell-uc/workload_object_distribution:latest
         imagePullPolicy: IfNotPresent
         name: object-distribution
+        resources:
+          requests:
+            cpu: "2"
+            ephemeral-storage: 500M
+            memory: 2Gi
+            nvidia.com/gpu: "0"
       nodeSelector:
         kubernetes.io/hostname: glaciation-testm1w5-worker01
       restartPolicy: Never
@@ -2194,6 +2206,12 @@ spec:
         image: ghcr.io/glaciation-heu/dell-uc/workload_operational_efficiency:latest
         imagePullPolicy: IfNotPresent
         name: operational-efficiency
+        resources:
+          requests:
+            cpu: "2"
+            ephemeral-storage: 500M
+            memory: 2Gi
+            nvidia.com/gpu: "0"
       nodeSelector:
         kubernetes.io/hostname: glaciation-testm1w5-worker01
       restartPolicy: Never

@@ -5,3 +5,4 @@ resources:
   - nginx-ingress.yaml
   - jena-fuseki.yaml
   - longhorn.yaml
+  - jenkins.yaml

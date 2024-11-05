@@ -1,0 +1,35 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: jenkins
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/hook: Sync
+    argocd.argoproj.io/sync-wave: "-10"
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+spec:
+  destination:
+    namespace: jenkins
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    repoURL: https://charts.jenkins.io/
+    chart: jenkins
+    targetRevision: 5.7.*
+    helm:
+      valuesObject:
+        controller:
+          admin:
+            user: admin          
+            password: jenkins
+        ingress:
+          enabled: false
+        
+  syncPolicy:
+    automated:
+     prune: true
+     selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

@@ -15,6 +15,7 @@ spec:
             memory: "2Gi"
             cpu: "2"
             ephemeral-storage: "500M"
+          limits:
             nvidia.com/gpu: "0"                                                                                                                 
         command: ["python", "/app/workload_anomaly_detection.py"]
         args: ["--url", "http://metadata-service.dkg-engine.svc.cluster.local/api/v0/graph"]  

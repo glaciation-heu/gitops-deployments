@@ -813,10 +813,10 @@ spec:
       valuesObject:
         ingress:
           hosts:
-            dataGenerator: data-generator.integration
-            databaseController: database-controller.integration
-            model: model.integration
-            plugin: plugin.integration
+            dataGenerator: data-generator.validation
+            databaseController: database-controller.validation
+            model: model.validation
+            plugin: plugin.validation
     repoURL: https://idmg-pub.gitlab.io/helm-charts/
     targetRevision: 0.*.*
   syncPolicy:
@@ -858,6 +858,41 @@ spec:
             memory: 4G
     repoURL: https://glaciation-heu.github.io/jena-fuseki/helm-charts/
     targetRevision: 1.*.*
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true
+    - ServerSideApply=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  annotations:
+    argocd.argoproj.io/hook: Sync
+    argocd.argoproj.io/sync-wave: "-10"
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+  name: jenkins
+  namespace: argocd
+spec:
+  destination:
+    namespace: jenkins
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    chart: jenkins
+    helm:
+      valuesObject:
+        controller:
+          admin:
+            password: jenkins
+            user: admin
+        ingress:
+          enabled: false
+    repoURL: https://charts.jenkins.io/
+    targetRevision: 5.7.*
   syncPolicy:
     automated:
       prune: true
@@ -2496,6 +2531,25 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
+  name: jenkins-ingress
+  namespace: jenkins
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: jenkins.validation
+    http:
+      paths:
+      - backend:
+          service:
+            name: jenkins
+            port:
+              number: 8080
+        path: /
+        pathType: Prefix
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
   name: kafdrop-ingress
   namespace: kafdrop
 spec:
@@ -2520,7 +2574,7 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-  - host: longhorn.uc2
+  - host: longhorn.validation
     http:
       paths:
       - backend:

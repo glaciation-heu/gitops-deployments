@@ -2186,11 +2186,12 @@ spec:
         imagePullPolicy: IfNotPresent
         name: anomaly-detection
         resources:
+          limits:
+            nvidia.com/gpu: "0"
           requests:
             cpu: "2"
             ephemeral-storage: 500M
             memory: 2Gi
-            nvidia.com/gpu: "0"
       nodeSelector:
         kubernetes.io/hostname: glaciation-testm1w5-worker01
       restartPolicy: Never
@@ -2214,11 +2215,12 @@ spec:
         imagePullPolicy: IfNotPresent
         name: object-distribution
         resources:
+          limits:
+            nvidia.com/gpu: "0"
           requests:
             cpu: "2"
             ephemeral-storage: 500M
             memory: 2Gi
-            nvidia.com/gpu: "0"
       nodeSelector:
         kubernetes.io/hostname: glaciation-testm1w5-worker01
       restartPolicy: Never
@@ -2242,11 +2244,12 @@ spec:
         imagePullPolicy: IfNotPresent
         name: operational-efficiency
         resources:
+          limits:
+            nvidia.com/gpu: "0"
           requests:
             cpu: "2"
             ephemeral-storage: 500M
             memory: 2Gi
-            nvidia.com/gpu: "0"
       nodeSelector:
         kubernetes.io/hostname: glaciation-testm1w5-worker01
       restartPolicy: Never

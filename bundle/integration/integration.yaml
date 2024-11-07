@@ -891,6 +891,9 @@ spec:
             user: admin
         ingress:
           enabled: false
+        persistence:
+          enabled: true
+          existingClaim: jenkins-pvc
     repoURL: https://charts.jenkins.io/
     targetRevision: 5.7.*
   syncPolicy:

@@ -25,7 +25,15 @@ spec:
             password: jenkins
         ingress:
           enabled: false
-        
+        persistence:
+          # -- Enable the use of a Jenkins PVC
+          enabled: true
+
+          # A manually managed Persistent Volume and Claim
+          # Requires persistence.enabled: true
+          # If defined, PVC must be created manually before volume will be bound
+          # -- Provide the name of a PVC
+          existingClaim: jenkins-pvc
   syncPolicy:
     automated:
      prune: true

@@ -920,13 +920,24 @@ spec:
       values: |
         server:
           servlet:
-            contextPath: /kafdrop
+            contextPath: /
         service:
           annotations: {}
           type: ClusterIP
           port: 80
         kafka:
           brokerConnect: kafka.kafka.svc.cluster.local:9092
+        resources:
+          requests:
+            cpu: 1m
+            memory: 128Mi
+            nvidia.com/gpu: 0
+            ephemeral-storage: 1Mi
+          limits:
+            cpu: 100m
+            memory: 128Mi
+            nvidia.com/gpu: 0
+            ephemeral-storage: 10Mi
     repoURL: https://glaciation-heu.github.io/mef-sog-uc1/
     targetRevision: 0.1.0
   syncPolicy:
@@ -972,6 +983,17 @@ spec:
             accessModes:
               - ReadWriteOnce
             size: 2Gi
+          resources:
+            requests:
+              cpu: 1
+              memory: 2Gi
+              nvidia.com/gpu: 0
+              ephemeral-storage: 5Mi
+            limits:
+              cpu: 1
+              memory: 2Gi
+              nvidia.com/gpu: 0
+              ephemeral-storage: 20Mi
 
         controller:
           replicaCount: 0
@@ -986,6 +1008,17 @@ spec:
             accessModes:
               - ReadWriteOnce
             size: 5Gi
+          resources:
+            requests:
+              cpu: 1
+              memory: 2Gi
+              nvidia.com/gpu: 0
+              ephemeral-storage: 1Mi
+            limits:
+              cpu: 1
+              memory: 2Gi
+              nvidia.com/gpu: 0
+              ephemeral-storage: 5Mi
 
         listeners:
           client:
@@ -1021,6 +1054,42 @@ spec:
   project: default
   source:
     chart: keda
+    helm:
+      values: |
+        resources:
+          operator:
+            limits:
+              cpu: 1
+              memory: 1000Mi
+              nvidia.com/gpu: 0
+              ephemeral-storage: 1Mi
+            requests:
+              cpu: 100m
+              memory: 100Mi
+              nvidia.com/gpu: 0
+              ephemeral-storage: 5Mi
+          metricServer:
+            limits:
+              cpu: 1
+              memory: 1000Mi
+              nvidia.com/gpu: 0
+              ephemeral-storage: 1Mi
+            requests:
+              cpu: 100m
+              memory: 100Mi
+              nvidia.com/gpu: 0
+              ephemeral-storage: 5Mi
+          webhooks:
+            limits:
+              cpu: 1
+              memory: 1000Mi
+              nvidia.com/gpu: 0
+              ephemeral-storage: 1Mi
+            requests:
+              cpu: 100m
+              memory: 100Mi
+              nvidia.com/gpu: 0
+              ephemeral-storage: 5Mi
     repoURL: https://kedacore.github.io/charts
     targetRevision: 2.14.0
   syncPolicy:
@@ -2569,7 +2638,7 @@ spec:
             name: kafdrop
             port:
               number: 80
-        path: /kafdrop/
+        path: /
         pathType: Prefix
 ---
 apiVersion: networking.k8s.io/v1

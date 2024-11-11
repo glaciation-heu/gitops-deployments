@@ -12,13 +12,24 @@ spec:
       values: |
         server:
           servlet:
-            contextPath: /kafdrop
+            contextPath: /
         service:
           annotations: {}
           type: ClusterIP
           port: 80
         kafka:
           brokerConnect: kafka.kafka.svc.cluster.local:9092
+        resources:
+          requests:
+            cpu: 1m
+            memory: 128Mi
+            nvidia.com/gpu: 0
+            ephemeral-storage: 1Mi
+          limits:
+            cpu: 100m
+            memory: 128Mi
+            nvidia.com/gpu: 0
+            ephemeral-storage: 10Mi
     chart: kafdrop
   destination:
     server: 'https://kubernetes.default.svc'

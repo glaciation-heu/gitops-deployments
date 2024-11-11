@@ -27,7 +27,7 @@ spec:
             ephemeral-storage: 1Mi
           limits:
             cpu: 100m
-            memory: 128Mi
+            memory: 1Gi
             nvidia.com/gpu: 0
             ephemeral-storage: 10Mi
     chart: kafdrop

@@ -8,6 +8,42 @@ spec:
   source:
     repoURL: 'https://kedacore.github.io/charts'
     targetRevision: 2.14.0
+    helm:
+      values: |        
+        resources:
+          operator:
+            limits:
+              cpu: 1
+              memory: 1000Mi
+              nvidia.com/gpu: 0
+              ephemeral-storage: 1Mi
+            requests:
+              cpu: 100m
+              memory: 100Mi
+              nvidia.com/gpu: 0
+              ephemeral-storage: 5Mi
+          metricServer:
+            limits:
+              cpu: 1
+              memory: 1000Mi
+              nvidia.com/gpu: 0
+              ephemeral-storage: 1Mi
+            requests:
+              cpu: 100m
+              memory: 100Mi
+              nvidia.com/gpu: 0
+              ephemeral-storage: 5Mi
+          webhooks:
+            limits:
+              cpu: 1
+              memory: 1000Mi
+              nvidia.com/gpu: 0
+              ephemeral-storage: 1Mi
+            requests:
+              cpu: 100m
+              memory: 100Mi
+              nvidia.com/gpu: 0
+              ephemeral-storage: 5Mi
     chart: keda
   destination:
     server: 'https://kubernetes.default.svc'

@@ -31,6 +31,17 @@ spec:
             accessModes:
               - ReadWriteOnce
             size: 2Gi
+          resources:
+            requests:
+              cpu: 1
+              memory: 2Gi
+              nvidia.com/gpu: 0
+              ephemeral-storage: 5Mi
+            limits:
+              cpu: 1
+              memory: 2Gi
+              nvidia.com/gpu: 0
+              ephemeral-storage: 20Mi
   
         controller:
           replicaCount: 0
@@ -45,7 +56,18 @@ spec:
             accessModes:
               - ReadWriteOnce
             size: 5Gi
-  
+          resources:
+            requests:
+              cpu: 1
+              memory: 2Gi
+              nvidia.com/gpu: 0
+              ephemeral-storage: 1Mi
+            limits:
+              cpu: 1
+              memory: 2Gi
+              nvidia.com/gpu: 0
+              ephemeral-storage: 5Mi
+        
         listeners:
           client:
             protocol: plaintext

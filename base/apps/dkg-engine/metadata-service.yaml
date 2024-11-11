@@ -13,7 +13,7 @@ spec:
   source:
     repoURL: https://glaciation-heu.github.io/glaciation-metadata-service/helm-charts/
     chart: metadata-service
-    targetRevision: 0.*.*
+    targetRevision: 1.*.*
     helm:
       valuesObject:
         ingressHostName: metadata.integration

@@ -16,34 +16,34 @@ spec:
               cpu: 1
               memory: 1000Mi
               nvidia.com/gpu: 0
-              ephemeral-storage: 1Mi
+              ephemeral-storage: 5Mi
             requests:
               cpu: 100m
               memory: 100Mi
               nvidia.com/gpu: 0
-              ephemeral-storage: 5Mi
+              ephemeral-storage: 1Mi
           metricServer:
             limits:
               cpu: 1
               memory: 1000Mi
               nvidia.com/gpu: 0
-              ephemeral-storage: 1Mi
+              ephemeral-storage: 5Mi
             requests:
               cpu: 100m
               memory: 100Mi
               nvidia.com/gpu: 0
-              ephemeral-storage: 5Mi
+              ephemeral-storage: 1Mi
           webhooks:
             limits:
               cpu: 1
               memory: 1000Mi
               nvidia.com/gpu: 0
-              ephemeral-storage: 1Mi
+              ephemeral-storage: 5Mi
             requests:
               cpu: 100m
               memory: 100Mi
               nvidia.com/gpu: 0
-              ephemeral-storage: 5Mi
+              ephemeral-storage: 1Mi
     chart: keda
   destination:
     server: 'https://kubernetes.default.svc'

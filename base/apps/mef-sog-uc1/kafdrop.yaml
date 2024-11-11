@@ -12,7 +12,7 @@ spec:
       values: |
         server:
           servlet:
-            contextPath: /
+            contextPath: /kafdrop
         service:
           annotations: {}
           type: ClusterIP

@@ -14,5 +14,5 @@ spec:
                 name: kafdrop
                 port:
                   number: 80
-            path: /
+            path: /kafdrop/
             pathType: Prefix

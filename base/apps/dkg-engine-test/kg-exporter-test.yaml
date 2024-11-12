@@ -1,0 +1,130 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kg-exporter-test
+  namespace: argocd
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+spec:
+  destination:
+    namespace: dkg-engine-test
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    repoURL: https://glaciation-heu.github.io/kg_exporter/helm-charts/
+    chart: kg-exporter
+    targetRevision: 0.*.*
+    helm:
+      valuesObject:
+        ingressHostName: kg-exporter-test.integration
+
+        livenessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /
+            port: 8080
+            scheme: HTTP
+          initialDelaySeconds: 15
+          periodSeconds: 10
+          timeoutSeconds: 5
+
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 8080
+            scheme: HTTP
+          initialDelaySeconds: 15
+          periodSeconds: 10
+          timeoutSeconds: 5
+
+        settings:
+          builder:
+            builder_tick_seconds: 600
+            node_port: 80
+            single_slice_url: http://metadata-service-test:80
+            is_single_slice: True
+            queries:
+              node_queries:
+                - measurement_id: Energy.Usage
+                  source: Kepler
+                  unit: milliwatts
+                  property: Energy.Usage
+                  query: |
+                    label_replace(
+                      irate(kepler_node_platform_joules_total[10m] @{{now}}),
+                      "resource",
+                      "$1",
+                      "exported_instance",
+                      "(.+)"
+                    )
+                  result_parser: PROMETHEUS_PARSER
+
+                - measurement_id: Available
+                  subresource: CPU
+                  source: NodeExporter
+                  unit: Core
+                  property: CPU.Available
+                  aggregation:
+                    period_seconds: 600
+                    function: average
+                  query: |
+                    label_replace(
+                      sum(
+                        rate(
+                          node_cpu_seconds_total{mode="idle", service="monitoring-stack-prometheus-node-exporter"}[10m] @{{now}}
+                        )
+                      ) by (node),
+                      "resource",
+                      "$1",
+                      "node",
+                      "(.+)"
+                    )
+                  result_parser: PROMETHEUS_PARSER
+
+                - measurement_id: Available
+                  subresource: RAM
+                  source: NodeExporter
+                  unit: bytes
+                  property: RAM.Available
+                  query: |
+                    label_replace(
+                      node_memory_MemFree_bytes{service="monitoring-stack-prometheus-node-exporter"} @{{now}},
+                      "resource",
+                      "$1",
+                      "node",
+                      "(.+)"
+                    )
+                  result_parser: PROMETHEUS_PARSER
+
+                - measurement_id: Available
+                  subresource: Storage
+                  source: k8s-ephemeral-storage-metrics
+                  unit: bytes
+                  property: Storage.Available
+                  query: |
+                    label_replace(
+                      ephemeral_storage_node_available @{{now}},
+                      "resource",
+                      "$1",
+                      "node_name",
+                      "(.+)"
+                    )
+                  result_parser: PROMETHEUS_PARSER
+
+              pod_queries: []
+
+          k8s:
+            in_cluster: true
+          metadata:
+            metadata_service_url: metadata-service-test
+          prometheus:
+            endpoint_port: 8080
+          prometheus_client:
+            url: http://monitoring-stack-prometheus-server.monitoring
+  syncPolicy:
+    automated:
+     prune: true
+     selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

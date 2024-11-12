@@ -1,0 +1,35 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: jena-fuseki-test
+  namespace: argocd
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+spec:
+  destination:
+    namespace: dkg-engine-test
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    repoURL: https://glaciation-heu.github.io/jena-fuseki/helm-charts/
+    chart: jena-fuseki
+    targetRevision: 1.*.*
+    helm:
+      valuesObject:
+        ingressHostName: jena-fuseki-test.integration
+        resources:
+          limits:
+            cpu: 500m
+            memory: 4G
+          requests:
+            cpu: 500m
+            memory: 4G
+        persistence:
+          size: 200Gi
+  syncPolicy:
+    automated:
+     prune: true
+     selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

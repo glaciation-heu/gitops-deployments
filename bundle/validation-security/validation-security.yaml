@@ -3,30 +3,10 @@ kind: Namespace
 metadata:
   annotations:
     argocd.argoproj.io/hook: PreSync
-    argocd.argoproj.io/sync-wave: "-10"
-  labels:
-    create-ca-bundle: "true"
-  name: minio-tenant
----
-apiVersion: v1
-kind: Namespace
-metadata:
-  annotations:
-    argocd.argoproj.io/hook: PreSync
     argocd.argoproj.io/sync-wave: "-7"
   labels:
     create-ca-bundle: "true"
   name: spark-app
----
-apiVersion: v1
-kind: Namespace
-metadata:
-  annotations:
-    argocd.argoproj.io/hook: PreSync
-    argocd.argoproj.io/sync-wave: "-7"
-  labels:
-    create-ca-bundle: "true"
-  name: vault
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -36,15 +16,6 @@ metadata:
     argocd.argoproj.io/hook-delete-policy: HookSucceeded
   name: gatekeeper-smoke-test
   namespace: gatekeeper-system
----
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  annotations:
-    argocd.argoproj.io/hook: PreSync
-    argocd.argoproj.io/sync-wave: "-10"
-  name: minio-kes
-  namespace: minio-tenant
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -80,23 +51,6 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   annotations:
-    argocd.argoproj.io/hook: PreSync
-    argocd.argoproj.io/sync-wave: "-10"
-  name: role-tokenreview-binding
-  namespace: minio-tenant
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: system:auth-delegator
-subjects:
-- kind: ServiceAccount
-  name: minio-kes
-  namespace: minio-tenant
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  annotations:
     argocd.argoproj.io/hook: PostSync
     argocd.argoproj.io/hook-delete-policy: HookSucceeded
   name: gatekeeper-smoke-test
@@ -108,47 +62,6 @@ subjects:
 - kind: ServiceAccount
   name: gatekeeper-smoke-test
   namespace: gatekeeper-system
----
-apiVersion: v1
-data:
-  kes-policy.hcl: |
-    path "kv/data/minio-tenant/*" {
-      capabilities = [ "create", "read" ]
-    }
-    path "kv/metadata/minio-tenant/*" {
-      capabilities = [ "list", "delete" ]
-    }
-kind: ConfigMap
-metadata:
-  annotations:
-    argocd.argoproj.io/hook: PreSync
-    argocd.argoproj.io/sync-wave: "-7"
-  name: kes-policy
-  namespace: vault
----
-apiVersion: v1
-kind: Secret
-metadata:
-  annotations:
-    argocd.argoproj.io/hook: PreSync
-    argocd.argoproj.io/sync-wave: "-10"
-    kubernetes.io/service-account.name: minio-kes
-    replicator.v1.mittwald.de/replication-allowed: "true"
-    replicator.v1.mittwald.de/replication-allowed-namespaces: vault
-  name: minio-kes-secret
-  namespace: minio-tenant
-type: kubernetes.io/service-account-token
----
-apiVersion: v1
-data: {}
-kind: Secret
-metadata:
-  annotations:
-    argocd.argoproj.io/hook: Sync
-    argocd.argoproj.io/sync-wave: "-8"
-    replicator.v1.mittwald.de/replicate-from: minio-tenant/minio-kes-secret
-  name: minio-kes-secret
-  namespace: vault
 ---
 apiVersion: argoproj.io/v1alpha1
 kind: Application

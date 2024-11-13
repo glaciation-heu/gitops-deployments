@@ -3,8 +3,6 @@ kind: Kustomization
 resources:
   - ./base
   - ./kernel
-  - ./security
-  - ./data-sanitization
   - ./ai-decision-engine
   - ./ingresses
   - ./semantification

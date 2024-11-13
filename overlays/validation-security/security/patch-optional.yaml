@@ -1,0 +1,33 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: gatekeeper
+  namespace: argocd
+spec:
+  source:
+    helm: 
+      values: |
+        postInstall:
+          labelNamespace:
+            extraRules:
+            - apiGroups:
+              - management.cattle.io
+              resources:
+              - projects
+              verbs:
+              - updatepsa
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cert-manager
+  namespace: argocd
+spec:
+  source:
+    chart: cert-manager
+    repoURL: https://charts.jetstack.io
+    targetRevision: v1.14.5
+    helm:
+      values: |
+        cert-manager:
+          installCRDs: true

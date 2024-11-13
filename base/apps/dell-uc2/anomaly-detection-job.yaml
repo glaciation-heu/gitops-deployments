@@ -10,8 +10,15 @@ spec:
       - name: anomaly-detection
         image: ghcr.io/glaciation-heu/dell-uc/workload-anomaly-detection:latest  # Use the locally built image
         imagePullPolicy: IfNotPresent  # Prevent Kubernetes from pulling the image from a remote registry
+        resources:
+          requests:
+            memory: "2Gi"
+            cpu: "2"
+            ephemeral-storage: "500M"
+          limits:
+            nvidia.com/gpu: "0"                                                                                                                 
         command: ["python", "/app/workload_anomaly_detection.py"]
-        args: ["--url", "http://metadata.validation/api/v0/graph"]  
+        args: ["--url", "http://metadata-service.dkg-engine.svc.cluster.local/api/v0/graph"]  
       restartPolicy: Never
       nodeSelector:
         kubernetes.io/hostname: glaciation-worker01

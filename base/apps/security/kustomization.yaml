@@ -1,14 +1,22 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
-  - cert-manager.yaml
-  - gatekeeper.yaml
+  - ./manual/vault-extras.yaml
+  - ./manual/setup-ca-and-bundle.yaml
+  - ./manual/minio-kes-sa-and-secrets.yaml
+  - ./manual/minio-sse-smoke-tests.yaml
+  - ./manual/vault-init.yaml
+  - ./manual/gatekeeper-smoke-tests.yaml
+  - ./manual/set-default-resource-requests-and-limits.yaml
+  - ./manual/gatekeeper-resource-constraint-templates.yaml
+  - ./manual/gatekeeper-resource-constraints.yaml
   - set-multi-tenant-node-filtering.yaml
   - validate-multi-tenant-node-filtering.yaml
-  - setup-ca-and-bundle.yaml
+  - cert-manager.yaml
+  - gatekeeper.yaml
   - trust-manager.yaml
   - vault.yaml
   - gatekeeper-policy-manager.yaml
   - replicator.yaml
-  - ./manual/vault-init.yaml
-  - ./manual/gatekeeper-smoke-tests.yaml
+  - minio.yaml
+  - minio-tenant.yaml

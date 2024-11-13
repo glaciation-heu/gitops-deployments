@@ -5,4 +5,5 @@ resources:
   - kafdrop.ingress.yaml
   - mef-sog-uc1.ingress.yaml
   - longhorn.ingress.yaml
+  - jenkins.ingress.yaml
   

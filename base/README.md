@@ -18,3 +18,5 @@ Get a VPN access to the cluster from Dell. There is no direct connectivity witho
 | Prometheus                      | http://prometheus.integration                 |
 | Spark history server UI         | http://spark-history-server.integration/      |
 | Vault UI                        | https://vault.integration/                    |
+| Jenkins                         | https://jenkins.integration/                  |
+| Longhorn                        | https://longhorn.integration/                 |

@@ -12,7 +12,7 @@ spec:
       valuesObject:
         ingress:
           hosts:
-            databaseController: database-controller.integration
-            dataGenerator: data-generator.integration
-            plugin: plugin.integration
-            model: model.integration
+            databaseController: database-controller.validation
+            dataGenerator: data-generator.validation
+            plugin: plugin.validation
+            model: model.validation

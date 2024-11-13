@@ -3,7 +3,6 @@ kind: Kustomization
 resources:
   - ./manual/vault-extras.yaml
   - ./manual/setup-ca-and-bundle.yaml
-  - ./manual/minio-kes-sa-and-secrets.yaml
   - ./manual/minio-sse-smoke-tests.yaml
   - ./manual/vault-init.yaml
   - ./manual/gatekeeper-smoke-tests.yaml

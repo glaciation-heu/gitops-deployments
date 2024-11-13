@@ -1377,7 +1377,7 @@ spec:
             annotations:
               nginx.ingress.kubernetes.io/backend-protocol: HTTPS
             enabled: true
-            host: glaciation-tenant.validation
+            host: glaciation-tenant.integration
             ingressClassName: nginx
             path: /
             pathType: Prefix
@@ -1385,7 +1385,7 @@ spec:
             annotations:
               nginx.ingress.kubernetes.io/backend-protocol: HTTPS
             enabled: true
-            host: glaciation-tenant-console.validation
+            host: glaciation-tenant-console.integration
             ingressClassName: nginx
             path: /
             pathType: Prefix

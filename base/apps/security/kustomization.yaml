@@ -10,8 +10,8 @@ resources:
   - ./manual/set-default-resource-requests-and-limits.yaml
   - ./manual/gatekeeper-resource-constraint-templates.yaml
   - ./manual/gatekeeper-resource-constraints.yaml
-  - set-multi-tenant-node-filtering.yaml
-  - validate-multi-tenant-node-filtering.yaml
+  - ./manual/set-multi-tenant-node-filtering.yaml
+  - ./manual/validate-multi-tenant-node-filtering.yaml
   - cert-manager.yaml
   - gatekeeper.yaml
   - trust-manager.yaml

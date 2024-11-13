@@ -11,7 +11,7 @@ spec:
     kinds:
       - apiGroups: [""]
         kinds: ["Pod"]
-    namespace:
+    namespaces:
     - cert-manager
     - gatekeeper-system
     - minio-operator
@@ -36,7 +36,7 @@ spec:
     kinds:
       - apiGroups: [""]
         kinds: ["Pod"]
-    namespace:
+    namespaces:
     - cert-manager
     - gatekeeper-system
     - minio-operator

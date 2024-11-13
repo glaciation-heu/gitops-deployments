@@ -4,3 +4,23 @@ resources:
   - ../../../base/apps/security
 patches:
   - path: patch-optional.yaml
+  - patch: |-
+      - op: replace
+        path: /spec/sources/0/helm/valuesObject/server/ingress/hosts/0/host
+        value: vault.validation
+    target:
+      group: argoproj.io
+      version: v1alpha1
+      kind: Application
+      name: vault
+      namespace: argocd
+  - patch: |-
+      - op: replace
+        path: /spec/source/helm/valuesObject/ingress/hosts/0/host
+        value: gpm.validation
+    target:
+      group: argoproj.io
+      version: v1alpha1
+      kind: Application
+      name: gatekeeper-policy-manager
+      namespace: argocd

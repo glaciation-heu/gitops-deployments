@@ -6,16 +6,6 @@ metadata:
     argocd.argoproj.io/sync-wave: "-10"
   name: local-path-storage
 ---
-apiVersion: v1
-kind: Namespace
-metadata:
-  annotations:
-    argocd.argoproj.io/hook: PreSync
-    argocd.argoproj.io/sync-wave: "-10"
-  labels:
-    create-ca-bundle: "true"
-  name: minio-tenant
----
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
@@ -43,15 +33,6 @@ metadata:
     argocd.argoproj.io/sync-wave: "-10"
   name: local-path-provisioner-service-account
   namespace: local-path-storage
----
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  annotations:
-    argocd.argoproj.io/hook: PreSync
-    argocd.argoproj.io/sync-wave: "-10"
-  name: minio-kes
-  namespace: minio-tenant
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
@@ -205,23 +186,6 @@ metadata:
   annotations:
     argocd.argoproj.io/hook: PreSync
     argocd.argoproj.io/sync-wave: "-10"
-  name: role-tokenreview-binding
-  namespace: minio-tenant
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: system:auth-delegator
-subjects:
-- kind: ServiceAccount
-  name: minio-kes
-  namespace: minio-tenant
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  annotations:
-    argocd.argoproj.io/hook: PreSync
-    argocd.argoproj.io/sync-wave: "-10"
   name: local-path-provisioner-bind
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -303,19 +267,6 @@ metadata:
     argocd.argoproj.io/sync-wave: "-10"
   name: local-path-config
   namespace: local-path-storage
----
-apiVersion: v1
-kind: Secret
-metadata:
-  annotations:
-    argocd.argoproj.io/hook: PreSync
-    argocd.argoproj.io/sync-wave: "-10"
-    kubernetes.io/service-account.name: minio-kes
-    replicator.v1.mittwald.de/replication-allowed: "true"
-    replicator.v1.mittwald.de/replication-allowed-namespaces: vault
-  name: minio-kes-secret
-  namespace: minio-tenant
-type: kubernetes.io/service-account-token
 ---
 apiVersion: v1
 kind: Service
@@ -1038,177 +989,6 @@ kind: Application
 metadata:
   annotations:
     argocd.argoproj.io/compare-options: ServerSideDiff=true
-    argocd.argoproj.io/hook: Sync
-    argocd.argoproj.io/sync-wave: "-8"
-  finalizers:
-  - resources-finalizer.argocd.argoproj.io
-  name: minio
-  namespace: argocd
-spec:
-  destination:
-    namespace: minio-operator
-    server: https://kubernetes.default.svc
-  project: default
-  source:
-    chart: operator
-    helm:
-      valuesObject:
-        console:
-          ingress:
-            enabled: false
-        tenants: []
-    repoURL: https://operator.min.io
-    targetRevision: 5.0.14
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
-    syncOptions:
-    - CreateNamespace=true
-    - ServerSideApply=true
----
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  annotations:
-    argocd.argoproj.io/compare-options: ServerSideDiff=true
-    argocd.argoproj.io/hook: Sync
-    argocd.argoproj.io/sync-wave: "-8"
-  finalizers:
-  - resources-finalizer.argocd.argoproj.io
-  name: minio-tenant
-  namespace: argocd
-spec:
-  destination:
-    namespace: minio-tenant
-    server: https://kubernetes.default.svc
-  project: default
-  sources:
-  - chart: tenant
-    helm:
-      valuesObject:
-        ingress:
-          api:
-            annotations:
-              nginx.ingress.kubernetes.io/backend-protocol: HTTPS
-            enabled: true
-            host: glaciation-tenant.integration
-            ingressClassName: nginx
-            path: /
-            pathType: Prefix
-          console:
-            annotations:
-              nginx.ingress.kubernetes.io/backend-protocol: HTTPS
-            enabled: true
-            host: glaciation-tenant-console.integration
-            ingressClassName: nginx
-            path: /
-            pathType: Prefix
-        secrets:
-          accessKey: minio
-          name: glaciation-env-configuration
-          secretKey: minio123
-        tenant:
-          buckets:
-          - name: uc1
-          - name: uc2
-          - name: uc3
-          - name: sanitization
-          certificate:
-            requestAutoCert: true
-          configuration:
-            name: glaciation-env-configuration
-          kes:
-            clientCertSecret:
-              name: ca-bundle
-              type: kubernetes.io/tls
-            configuration: |-
-              address: :7373
-              tls:
-                key: /tmp/kes/server.key # Path to the TLS private key
-                cert: /tmp/kes/server.crt # Path to the TLS certificate
-              admin:
-                identity: ${MINIO_KES_IDENTITY}
-              cache:
-                expiry:
-                  any: 5m0s
-                  unused: 20s
-              log:
-                error: on
-                audit: off
-              keystore:
-                vault:
-                  endpoint: "https://vault-internal.vault.svc.cluster.local:8200"
-                  version: v2
-                  prefix: "minio-tenant" # Vault will store keys under this prefix
-                  kubernetes:
-                    role: "minio-kes"
-                    jwt: "/var/run/secrets/kubernetes.io/serviceaccount/token"
-                  tls: # The Vault client TLS configuration for certificate verification
-                    ca: "/tmp/kes/ca.crt" # Path to PEM root CA certificates
-                  status:
-                    ping: 10s # Duration until the server checks Vault's status again
-            containerSecurityContext:
-              allowPrivilegeEscalation: false
-              runAsGroup: 1000
-              runAsNonRoot: true
-              runAsUser: 1000
-            image:
-              repository: quay.io/minio/kes
-              tag: 2024-03-13T17-52-13Z
-            imagePullPolicy: IfNotPresent
-            keyName: encryption-key
-            replicas: 2
-            securityContext:
-              fsGroup: 1000
-              runAsGroup: 1000
-              runAsNonRoot: true
-              runAsUser: 1000
-            serviceAccountName: minio-kes
-          name: glaciation
-          pools:
-          - containerSecurityContext:
-              allowPrivilegeEscalation: false
-              capabilities:
-                drop:
-                - ALL
-              runAsGroup: 1000
-              runAsNonRoot: true
-              runAsUser: 1000
-              seccompProfile:
-                type: RuntimeDefault
-            name: pool-0
-            resources:
-              limits:
-                cpu: 2
-                memory: 4Gi
-              requests:
-                cpu: 1
-                memory: 2Gi
-            securityContext:
-              fsGroup: 1000
-              fsGroupChangePolicy: OnRootMismatch
-              runAsGroup: 1000
-              runAsNonRoot: true
-              runAsUser: 1000
-            servers: 4
-            size: 10Gi
-            storageClassName: local-path
-            volumesPerServer: 4
-    repoURL: https://operator.min.io
-    targetRevision: 5.0.14
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
-    syncOptions:
-    - ServerSideApply=true
----
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  annotations:
-    argocd.argoproj.io/compare-options: ServerSideDiff=true
   finalizers:
   - resources-finalizer.argocd.argoproj.io
   name: monitoring-stack
@@ -1566,71 +1346,6 @@ spec:
     syncOptions:
     - CreateNamespace=true
     - ServerSideApply=true
----
-apiVersion: batch/v1
-kind: Job
-metadata:
-  annotations:
-    argocd.argoproj.io/hook: PostSync
-    argocd.argoproj.io/hook-delete-policy: HookSucceeded
-  name: minio-smoke-tests
-  namespace: minio-tenant
-spec:
-  backoffLimit: 25
-  template:
-    spec:
-      containers:
-      - command:
-        - /bin/sh
-        - -c
-        - |
-          set -e # make sure the job fails if any instruction fails
-
-          source /tmp/config.env;
-          set -x;  # enable printing the command before execution (in the sub-shell)
-          mc alias set minio https://minio.minio-tenant.svc.cluster.local $MINIO_ROOT_USER $MINIO_ROOT_PASSWORD;
-          mc mb -p minio/test-encrypted-bucket;
-          mc encrypt set sse-kms encryption-key minio/test-encrypted-bucket;
-          mc ls minio;
-          echo "This is a line of text" > /tmp/test-object;
-          mc mv /tmp/test-object minio/test-encrypted-bucket;
-          mc ls minio/test-encrypted-bucket;
-          mc cat minio/test-encrypted-bucket/test-object
-        image: quay.io/minio/minio:RELEASE.2024-03-15T01-07-19Z
-        name: minio-client
-        securityContext:
-          allowPrivilegeEscalation: false
-          capabilities:
-            drop:
-            - ALL
-          privileged: false
-          runAsGroup: 1000
-          runAsUser: 1000
-        volumeMounts:
-        - mountPath: /tmp/config.env
-          name: configuration
-          readOnly: true
-          subPath: config.env
-        - mountPath: /etc/ssl/certs/ca.crt
-          name: ca-bundle
-          readOnly: true
-          subPath: ca.crt
-      restartPolicy: Never
-      securityContext:
-        runAsNonRoot: true
-        seccompProfile:
-          type: RuntimeDefault
-      volumes:
-      - configMap:
-          defaultMode: 422
-          name: ca-bundle
-        name: ca-bundle
-      - name: configuration
-        projected:
-          defaultMode: 420
-          sources:
-          - secret:
-              name: glaciation-env-configuration
 ---
 apiVersion: batch/v1
 kind: Job

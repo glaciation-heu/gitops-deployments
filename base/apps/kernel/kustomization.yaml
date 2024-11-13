@@ -1,9 +1,5 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
-  - minio-kes-sa-and-secrets.yaml
-  - minio.yaml
-  - minio-tenant.yaml
   - monitoring-stack.yaml
   - metrics-server.yaml
-  - ./manual/minio-sse-smoke-tests.yaml

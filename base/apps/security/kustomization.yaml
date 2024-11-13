@@ -3,12 +3,13 @@ kind: Kustomization
 resources:
   - cert-manager.yaml
   - gatekeeper.yaml
-  - set-default-resource-requests-and-limits.yaml
-  - validate-resource-requests-and-limits.yaml
-  - setup-ca-and-bundle.yaml
   - trust-manager.yaml
   - vault.yaml
   - gatekeeper-policy-manager.yaml
   - replicator.yaml
+  - ./manual/vault-extras.yaml
+  - ./manual/setup-ca-and-bundle.yaml
   - ./manual/vault-init.yaml
   - ./manual/gatekeeper-smoke-tests.yaml
+  - ./manual/set-default-resource-requests-and-limits.yaml
+  - ./manual/validate-resource-requests-and-limits.yaml

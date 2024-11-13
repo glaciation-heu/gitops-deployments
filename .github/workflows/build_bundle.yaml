@@ -20,7 +20,9 @@ jobs:
             matrix:
                 overlay:
                     - 'integration'
-                    - 'UC2'
+                    - 'integration-security'
+                    - 'validation'
+                    - 'validation-security'
         steps:
 
         - id: check-branch-exists

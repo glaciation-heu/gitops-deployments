@@ -208,7 +208,7 @@ spec:
           className: nginx
           enabled: true
           hosts:
-          - host: data-sanitization.integration
+          - host: data-sanitization.validation
             paths:
             - path: /
               pathType: Prefix
@@ -317,7 +317,7 @@ spec:
         ingress:
           enabled: true
           hosts:
-          - host: gpm.integration
+          - host: gpm.validation
             pathType: Prefix
             paths:
             - /
@@ -553,7 +553,7 @@ spec:
           className: nginx
           enabled: true
           hosts:
-          - host: spark-history-server.integration
+          - host: spark-history-server.validation
             paths:
             - path: /
               pathType: Prefix
@@ -730,7 +730,7 @@ spec:
               nginx.ingress.kubernetes.io/backend-protocol: HTTPS
             enabled: true
             hosts:
-            - host: vault.integration
+            - host: vault.validation
             ingressClassName: nginx
           resources:
             limits:

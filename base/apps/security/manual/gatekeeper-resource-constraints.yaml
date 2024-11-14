@@ -5,7 +5,7 @@ metadata:
   name: container-must-have-requests
   annotations:
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
-    argocd.argoproj.io/sync-wave: "-30"
+    argocd.argoproj.io/sync-wave: "-20"
 spec:
   match:
     kinds:
@@ -30,7 +30,7 @@ metadata:
   name: container-must-have-limits
   annotations:
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
-    argocd.argoproj.io/sync-wave: "-30"
+    argocd.argoproj.io/sync-wave: "-20"
 spec:
   match:
     kinds:

@@ -421,7 +421,7 @@ kind: Application
 metadata:
   annotations:
     argocd.argoproj.io/hook: Sync
-    argocd.argoproj.io/sync-wave: "-8"
+    argocd.argoproj.io/sync-wave: "-20"
   finalizers:
   - resources-finalizer.argocd.argoproj.io
   name: replicator
@@ -544,7 +544,7 @@ kind: Application
 metadata:
   annotations:
     argocd.argoproj.io/hook: Sync
-    argocd.argoproj.io/sync-wave: "-8"
+    argocd.argoproj.io/sync-wave: "-20"
   finalizers:
   - resources-finalizer.argocd.argoproj.io
   name: trust-manager
@@ -983,7 +983,7 @@ metadata:
   annotations:
     argocd.argoproj.io/hook: Sync
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
-    argocd.argoproj.io/sync-wave: "-8"
+    argocd.argoproj.io/sync-wave: "-19"
   name: vault-certificate
   namespace: vault
 spec:
@@ -1043,7 +1043,7 @@ kind: K8sContainerLimits
 metadata:
   annotations:
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
-    argocd.argoproj.io/sync-wave: "-30"
+    argocd.argoproj.io/sync-wave: "-20"
   name: container-must-have-limits
 spec:
   match:
@@ -1070,7 +1070,7 @@ kind: K8sContainerRequests
 metadata:
   annotations:
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
-    argocd.argoproj.io/sync-wave: "-30"
+    argocd.argoproj.io/sync-wave: "-20"
   name: container-must-have-requests
 spec:
   match:

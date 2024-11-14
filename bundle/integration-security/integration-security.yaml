@@ -68,7 +68,7 @@ kind: Application
 metadata:
   annotations:
     argocd.argoproj.io/hook: Sync
-    argocd.argoproj.io/sync-wave: "-20"
+    argocd.argoproj.io/sync-wave: "-30"
   finalizers:
   - resources-finalizer.argocd.argoproj.io
   name: cert-manager
@@ -211,7 +211,7 @@ kind: Application
 metadata:
   annotations:
     argocd.argoproj.io/hook: Sync
-    argocd.argoproj.io/sync-wave: "-8"
+    argocd.argoproj.io/sync-wave: "-30"
   finalizers:
   - resources-finalizer.argocd.argoproj.io
   name: gatekeeper-policy-manager
@@ -251,7 +251,7 @@ metadata:
   annotations:
     argocd.argoproj.io/compare-options: ServerSideDiff=true
     argocd.argoproj.io/hook: Sync
-    argocd.argoproj.io/sync-wave: "-8"
+    argocd.argoproj.io/sync-wave: "-30"
   finalizers:
   - resources-finalizer.argocd.argoproj.io
   name: minio
@@ -285,7 +285,7 @@ metadata:
   annotations:
     argocd.argoproj.io/compare-options: ServerSideDiff=true
     argocd.argoproj.io/hook: Sync
-    argocd.argoproj.io/sync-wave: "-8"
+    argocd.argoproj.io/sync-wave: "-4"
   finalizers:
   - resources-finalizer.argocd.argoproj.io
   name: minio-tenant
@@ -421,7 +421,7 @@ kind: Application
 metadata:
   annotations:
     argocd.argoproj.io/hook: Sync
-    argocd.argoproj.io/sync-wave: "-20"
+    argocd.argoproj.io/sync-wave: "-30"
   finalizers:
   - resources-finalizer.argocd.argoproj.io
   name: replicator
@@ -544,7 +544,7 @@ kind: Application
 metadata:
   annotations:
     argocd.argoproj.io/hook: Sync
-    argocd.argoproj.io/sync-wave: "-20"
+    argocd.argoproj.io/sync-wave: "-30"
   finalizers:
   - resources-finalizer.argocd.argoproj.io
   name: trust-manager
@@ -580,7 +580,7 @@ metadata:
   annotations:
     argocd.argoproj.io/compare-options: ServerSideDiff=true
     argocd.argoproj.io/hook: Sync
-    argocd.argoproj.io/sync-wave: "-8"
+    argocd.argoproj.io/sync-wave: "-20"
   finalizers:
   - resources-finalizer.argocd.argoproj.io
   name: vault
@@ -824,7 +824,7 @@ kind: Job
 metadata:
   annotations:
     argocd.argoproj.io/hook: Sync
-    argocd.argoproj.io/sync-wave: "-8"
+    argocd.argoproj.io/sync-wave: "-20"
   name: init-vault-cluster
   namespace: vault
 spec:
@@ -962,7 +962,7 @@ kind: Certificate
 metadata:
   annotations:
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
-    argocd.argoproj.io/sync-wave: "-8"
+    argocd.argoproj.io/sync-wave: "-25"
   name: my-selfsigned-ca
   namespace: cert-manager
 spec:
@@ -983,7 +983,7 @@ metadata:
   annotations:
     argocd.argoproj.io/hook: Sync
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
-    argocd.argoproj.io/sync-wave: "-19"
+    argocd.argoproj.io/sync-wave: "-25"
   name: vault-certificate
   namespace: vault
 spec:
@@ -1022,7 +1022,7 @@ kind: ClusterIssuer
 metadata:
   annotations:
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
-    argocd.argoproj.io/sync-wave: "-8"
+    argocd.argoproj.io/sync-wave: "-25"
   name: private-ca-issuer
 spec:
   ca:
@@ -1033,7 +1033,7 @@ kind: ClusterIssuer
 metadata:
   annotations:
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
-    argocd.argoproj.io/sync-wave: "-8"
+    argocd.argoproj.io/sync-wave: "-25"
   name: selfsigned-issuer
 spec:
   selfSigned: {}
@@ -1044,7 +1044,7 @@ metadata:
   annotations:
     argocd.argoproj.io/hook: Sync
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
-    argocd.argoproj.io/sync-wave: "-8"
+    argocd.argoproj.io/sync-wave: "-19"
   name: ca-bundle
 spec:
   sources:

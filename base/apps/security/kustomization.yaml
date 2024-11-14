@@ -6,9 +6,9 @@ resources:
   - ./manual/minio-sse-smoke-tests.yaml
   - ./manual/vault-init.yaml
   - ./manual/gatekeeper-smoke-tests.yaml
-  - ./manual/set-default-resource-requests-and-limits.yaml
-  - ./manual/gatekeeper-resource-constraint-templates.yaml
-  - ./manual/gatekeeper-resource-constraints.yaml
+  # - ./manual/set-default-resource-requests-and-limits.yaml
+  # - ./manual/gatekeeper-resource-constraint-templates.yaml
+  # - ./manual/gatekeeper-resource-constraints.yaml
   - cert-manager.yaml
   - gatekeeper.yaml
   - trust-manager.yaml

@@ -67,7 +67,6 @@ apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   annotations:
-    argocd.argoproj.io/hook: Sync
     argocd.argoproj.io/sync-wave: "-30"
   finalizers:
   - resources-finalizer.argocd.argoproj.io
@@ -163,7 +162,6 @@ apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   annotations:
-    argocd.argoproj.io/hook: Sync
     argocd.argoproj.io/sync-wave: "-30"
   finalizers:
   - resources-finalizer.argocd.argoproj.io
@@ -210,7 +208,6 @@ apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   annotations:
-    argocd.argoproj.io/hook: Sync
     argocd.argoproj.io/sync-wave: "-30"
   finalizers:
   - resources-finalizer.argocd.argoproj.io
@@ -250,7 +247,6 @@ kind: Application
 metadata:
   annotations:
     argocd.argoproj.io/compare-options: ServerSideDiff=true
-    argocd.argoproj.io/hook: Sync
     argocd.argoproj.io/sync-wave: "-30"
   finalizers:
   - resources-finalizer.argocd.argoproj.io
@@ -284,7 +280,6 @@ kind: Application
 metadata:
   annotations:
     argocd.argoproj.io/compare-options: ServerSideDiff=true
-    argocd.argoproj.io/hook: Sync
     argocd.argoproj.io/sync-wave: "-4"
   finalizers:
   - resources-finalizer.argocd.argoproj.io
@@ -420,7 +415,6 @@ apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   annotations:
-    argocd.argoproj.io/hook: Sync
     argocd.argoproj.io/sync-wave: "-30"
   finalizers:
   - resources-finalizer.argocd.argoproj.io
@@ -543,7 +537,6 @@ apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   annotations:
-    argocd.argoproj.io/hook: Sync
     argocd.argoproj.io/sync-wave: "-30"
   finalizers:
   - resources-finalizer.argocd.argoproj.io
@@ -579,7 +572,6 @@ kind: Application
 metadata:
   annotations:
     argocd.argoproj.io/compare-options: ServerSideDiff=true
-    argocd.argoproj.io/hook: Sync
     argocd.argoproj.io/sync-wave: "-20"
   finalizers:
   - resources-finalizer.argocd.argoproj.io
@@ -961,7 +953,6 @@ apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
   annotations:
-    argocd.argoproj.io/hook: Sync
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
     argocd.argoproj.io/sync-wave: "-25"
   name: my-selfsigned-ca
@@ -982,7 +973,6 @@ apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
   annotations:
-    argocd.argoproj.io/hook: Sync
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
     argocd.argoproj.io/sync-wave: "-25"
   name: vault-certificate
@@ -1022,7 +1012,6 @@ apiVersion: cert-manager.io/v1
 kind: ClusterIssuer
 metadata:
   annotations:
-    argocd.argoproj.io/hook: Sync
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
     argocd.argoproj.io/sync-wave: "-25"
   name: private-ca-issuer
@@ -1034,7 +1023,6 @@ apiVersion: cert-manager.io/v1
 kind: ClusterIssuer
 metadata:
   annotations:
-    argocd.argoproj.io/hook: Sync
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
     argocd.argoproj.io/sync-wave: "-25"
   name: selfsigned-issuer
@@ -1045,7 +1033,6 @@ apiVersion: trust.cert-manager.io/v1alpha1
 kind: Bundle
 metadata:
   annotations:
-    argocd.argoproj.io/hook: Sync
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
     argocd.argoproj.io/sync-wave: "-25"
   name: ca-bundle

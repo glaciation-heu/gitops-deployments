@@ -609,10 +609,12 @@ spec:
             nvidia.com/gpu: 0
             ephemeral-storage: 1Mi
           limits:
-            cpu: 100m
+            cpu: 1
             memory: 1Gi
             nvidia.com/gpu: 0
             ephemeral-storage: 10Mi
+        jvm:
+          opts: '-Xms32M -Xmx64M'
     repoURL: https://glaciation-heu.github.io/mef-sog-uc1/
     targetRevision: 0.1.0
   syncPolicy:

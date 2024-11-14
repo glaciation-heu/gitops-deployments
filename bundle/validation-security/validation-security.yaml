@@ -961,6 +961,8 @@ apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
   annotations:
+    argocd.argoproj.io/hook: Sync
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
     argocd.argoproj.io/sync-wave: "-25"
   name: my-selfsigned-ca
   namespace: cert-manager
@@ -1020,6 +1022,8 @@ apiVersion: cert-manager.io/v1
 kind: ClusterIssuer
 metadata:
   annotations:
+    argocd.argoproj.io/hook: Sync
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
     argocd.argoproj.io/sync-wave: "-25"
   name: private-ca-issuer
 spec:
@@ -1030,6 +1034,8 @@ apiVersion: cert-manager.io/v1
 kind: ClusterIssuer
 metadata:
   annotations:
+    argocd.argoproj.io/hook: Sync
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
     argocd.argoproj.io/sync-wave: "-25"
   name: selfsigned-issuer
 spec:

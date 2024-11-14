@@ -3,7 +3,7 @@ kind: Namespace
 metadata:
   annotations:
     argocd.argoproj.io/hook: PreSync
-    argocd.argoproj.io/sync-wave: "-7"
+    argocd.argoproj.io/sync-wave: "-3"
   labels:
     create-ca-bundle: "true"
   name: spark-app
@@ -103,7 +103,7 @@ kind: Application
 metadata:
   annotations:
     argocd.argoproj.io/hook: Sync
-    argocd.argoproj.io/sync-wave: "-6"
+    argocd.argoproj.io/sync-wave: "-2"
   finalizers:
   - resources-finalizer.argocd.argoproj.io
   name: data-sanitization
@@ -448,7 +448,7 @@ kind: Application
 metadata:
   annotations:
     argocd.argoproj.io/hook: Sync
-    argocd.argoproj.io/sync-wave: "-6"
+    argocd.argoproj.io/sync-wave: "-3"
   finalizers:
   - resources-finalizer.argocd.argoproj.io
   name: spark-history-server
@@ -511,7 +511,7 @@ kind: Application
 metadata:
   annotations:
     argocd.argoproj.io/hook: Sync
-    argocd.argoproj.io/sync-wave: "-6"
+    argocd.argoproj.io/sync-wave: "-3"
   finalizers:
   - resources-finalizer.argocd.argoproj.io
   name: spark-operator
@@ -961,7 +961,6 @@ apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
   annotations:
-    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
     argocd.argoproj.io/sync-wave: "-25"
   name: my-selfsigned-ca
   namespace: cert-manager
@@ -1021,7 +1020,6 @@ apiVersion: cert-manager.io/v1
 kind: ClusterIssuer
 metadata:
   annotations:
-    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
     argocd.argoproj.io/sync-wave: "-25"
   name: private-ca-issuer
 spec:
@@ -1032,7 +1030,6 @@ apiVersion: cert-manager.io/v1
 kind: ClusterIssuer
 metadata:
   annotations:
-    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
     argocd.argoproj.io/sync-wave: "-25"
   name: selfsigned-issuer
 spec:
@@ -1044,7 +1041,7 @@ metadata:
   annotations:
     argocd.argoproj.io/hook: Sync
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
-    argocd.argoproj.io/sync-wave: "-19"
+    argocd.argoproj.io/sync-wave: "-25"
   name: ca-bundle
 spec:
   sources:

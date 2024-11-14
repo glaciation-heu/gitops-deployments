@@ -5,7 +5,7 @@ metadata:
   namespace: argocd
   annotations:
     # argocd.argoproj.io/hook: Sync
-    argocd.argoproj.io/sync-wave: "-22"
+    argocd.argoproj.io/sync-wave: "-35"
   finalizers:
    - resources-finalizer.argocd.argoproj.io
 spec:

@@ -6,7 +6,7 @@ metadata:
     create-ca-bundle: "true"
   annotations:
     argocd.argoproj.io/hook: PreSync
-    argocd.argoproj.io/sync-wave: "-7"
+    argocd.argoproj.io/sync-wave: "-3"
 ---
 apiVersion: argoproj.io/v1alpha1
 kind: Application
@@ -15,7 +15,7 @@ metadata:
   namespace: argocd
   annotations:
     argocd.argoproj.io/hook: Sync
-    argocd.argoproj.io/sync-wave: "-6"
+    argocd.argoproj.io/sync-wave: "-3"
   finalizers:
   - resources-finalizer.argocd.argoproj.io
 spec:

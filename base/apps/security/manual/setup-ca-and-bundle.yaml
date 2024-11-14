@@ -4,7 +4,7 @@ kind: ClusterIssuer
 metadata:
   name: selfsigned-issuer
   annotations:
-    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+    # argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
     argocd.argoproj.io/sync-wave: "-25"
 spec:
   selfSigned: {}
@@ -15,7 +15,7 @@ metadata:
   name: my-selfsigned-ca
   namespace: cert-manager
   annotations:
-    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+    # argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
     argocd.argoproj.io/sync-wave: "-25"
 spec:
   isCA: true
@@ -34,7 +34,7 @@ kind: ClusterIssuer
 metadata:
   name: private-ca-issuer
   annotations:
-    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+    # argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
     argocd.argoproj.io/sync-wave: "-25"
 spec:
   ca:
@@ -49,7 +49,7 @@ metadata:
   annotations:
     argocd.argoproj.io/hook: Sync
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
-    argocd.argoproj.io/sync-wave: "-19"
+    argocd.argoproj.io/sync-wave: "-25"
 spec:
   sources:
   # Include a bundle of publicly trusted certificates which can be

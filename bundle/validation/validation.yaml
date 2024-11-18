@@ -1433,7 +1433,7 @@ spec:
         - python
         - /app/workload_object_distribution.py
         image: ghcr.io/glaciation-heu/dell-uc/workload_object_distribution:latest
-        imagePullPolicy: IfNotPresent
+        imagePullPolicy: Always
         name: object-distribution
         resources:
           limits:

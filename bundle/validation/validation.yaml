@@ -523,7 +523,7 @@ spec:
       valuesObject:
         ingressHostName: jena-fuseki.validation
         persistence:
-          size: 300Gi
+          size: 100Gi
         resources:
           limits:
             cpu: 500m

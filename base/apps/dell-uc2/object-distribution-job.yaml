@@ -9,7 +9,7 @@ spec:
       containers:
       - name: object-distribution
         image:  ghcr.io/glaciation-heu/dell-uc/workload_object_distribution:latest # Use the local Docker registry
-        imagePullPolicy:  IfNotPresent        
+        imagePullPolicy:  Always        
         resources:
           requests:
             memory: "2Gi"

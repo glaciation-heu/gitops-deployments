@@ -7,9 +7,6 @@ patches:
       - op: replace
         path: /spec/template/spec/nodeSelector/kubernetes.io~1hostname
         value: glaciation-testm1w5-worker01
-      - op: replace
-        path: /spec/template/spec/containers/0/args
-        value: ["--url", "http://metadata.integration/api/v0/graph"]
     target: 
       group: batch
       version: v1

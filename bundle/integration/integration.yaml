@@ -1360,7 +1360,7 @@ spec:
       containers:
       - args:
         - --url
-        - http://metadata.integration/api/v0/graph
+        - http://metadata-service.dkg-engine.svc.cluster.local/api/v0/graph
         command:
         - python
         - /app/workload_anomaly_detection.py
@@ -1389,7 +1389,7 @@ spec:
       containers:
       - args:
         - --url
-        - http://metadata.integration/api/v0/graph
+        - http://metadata-service.dkg-engine.svc.cluster.local/api/v0/graph
         command:
         - python
         - /app/workload_object_distribution.py
@@ -1418,7 +1418,7 @@ spec:
       containers:
       - args:
         - --url
-        - http://metadata.integration/api/v0/graph
+        - http://metadata-service.dkg-engine.svc.cluster.local/api/v0/graph
         command:
         - python
         - workload_operational_efficiency.py

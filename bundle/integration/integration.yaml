@@ -473,6 +473,77 @@ spec:
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
+  annotations:
+    argocd.argoproj.io/compare-options: ServerSideDiff=true
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+  name: dkg-tenant
+  namespace: argocd
+spec:
+  destination:
+    namespace: dkg-engine
+    server: https://kubernetes.default.svc
+  project: default
+  sources:
+  - chart: tenant
+    helm:
+      valuesObject:
+        ingress:
+          api:
+            annotations:
+              nginx.ingress.kubernetes.io/backend-protocol: HTTPS
+            enabled: true
+            host: dkg-tenant.integration
+            ingressClassName: nginx
+            path: /
+            pathType: Prefix
+          console:
+            annotations:
+              nginx.ingress.kubernetes.io/backend-protocol: HTTPS
+            enabled: true
+            host: dkg-tenant-console.integration
+            ingressClassName: nginx
+            path: /
+            pathType: Prefix
+        secrets:
+          accessKey: minio
+          name: dkg-env-configuration
+          secretKey: minio123
+        tenant:
+          buckets:
+          - name: one
+          - name: two
+          - name: three
+          certificate:
+            requestAutoCert: false
+          configuration:
+            name: dkg-env-configuration
+          name: dkg
+          pools:
+          - name: dkg-pool
+            resources:
+              limits:
+                cpu: 2
+                memory: 4Gi
+              requests:
+                cpu: 1
+                memory: 2Gi
+            servers: 2
+            size: 1Gi
+            storageClassName: local-path
+            volumesPerServer: 2
+    repoURL: https://operator.min.io
+    targetRevision: 5.0.14
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - ServerSideApply=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
   finalizers:
   - resources-finalizer.argocd.argoproj.io
   name: idmg-decision-engine

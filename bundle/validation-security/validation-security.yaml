@@ -351,7 +351,7 @@ spec:
               runAsUser: 1000
               seccompProfile:
                 type: RuntimeDefault
-            name: pool-0
+            name: pool
             resources:
               limits:
                 cpu: 2
@@ -365,10 +365,10 @@ spec:
               runAsGroup: 1000
               runAsNonRoot: true
               runAsUser: 1000
-            servers: 4
-            size: 10Gi
+            servers: 2
+            size: 1Gi
             storageClassName: local-path
-            volumesPerServer: 4
+            volumesPerServer: 2
     repoURL: https://operator.min.io
     targetRevision: 5.0.14
   syncPolicy:

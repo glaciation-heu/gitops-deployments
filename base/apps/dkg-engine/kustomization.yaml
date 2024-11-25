@@ -9,3 +9,4 @@ resources:
   - trade-off-service.yaml
   - kg-exporter.yaml
   - nats.yaml
+  - dkg-tenant.yaml

@@ -1,0 +1,95 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: dkg-tenant
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/compare-options: ServerSideDiff=true
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  sources:
+  - repoURL: https://operator.min.io
+    chart: tenant
+    targetRevision: 5.0.14
+    helm:
+      valuesObject:
+        # Secret for configuring the root MinIO user
+        secrets:
+          name: dkg-env-configuration
+          accessKey: minio
+          secretKey: minio123
+
+        tenant:
+          name: dkg
+          # Kubernetes secret name that contains MinIO environment variable
+          # configurations
+          configuration:
+            name: dkg-env-configuration
+          pools:
+            - name: dkg-pool
+              # Number of MinIO Tenant pods
+              servers: 2
+              # Number of volumes per MinIO Tenant pod
+              volumesPerServer: 2
+              # Size of each volume
+              size: 1Gi
+              # Storage class of the volumes
+              storageClassName: local-path
+              # Minimum and maximum resources requested for each pod
+              resources:
+                requests:
+                  cpu: 1
+                  memory: 2Gi
+                limits:
+                  cpu: 2
+                  memory: 4Gi
+          # Enable automatic certificate generation and signing
+          certificate:
+            requestAutoCert: false
+          # Buckets to create during Tenant provisioning
+          buckets:
+            - name: one
+            - name: two
+            - name: three
+        ingress:
+          api:
+            enabled: true
+            ingressClassName: "nginx"
+            annotations:
+            #   # NOTE: To make sure the certificate is trusted by clients we should use
+            #   # something like Let's Encrypt
+            #   cert-manager.io/cluster-issuer: "private-ca-issuer"
+              nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+            # tls:
+            # - hosts:
+            #   - glaciation-tenant.integration
+            #   secretName: minio-tenant-ingress
+            host: dkg-tenant.integration
+            path: /
+            pathType: Prefix
+          console:
+            enabled: true
+            ingressClassName: "nginx"
+            annotations:
+            #   # NOTE: To make sure the certificate is trusted by clients we should use
+            #   # something like Let's Encrypt
+            #   cert-manager.io/cluster-issuer: "private-ca-issuer"
+              nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+            # tls:
+            # - hosts:
+            #   - glaciation-tenant-console.integration
+            #   secretName: minio-tenant-console-ingress
+            host: dkg-tenant-console.integration
+            path: /
+            pathType: Prefix
+  destination:
+    namespace: dkg-engine
+    server: https://kubernetes.default.svc
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - ServerSideApply=true

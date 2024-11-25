@@ -15,5 +15,4 @@ resources:
   - vault.yaml
   - gatekeeper-policy-manager.yaml
   - replicator.yaml
-  - minio.yaml
   - minio-tenant.yaml

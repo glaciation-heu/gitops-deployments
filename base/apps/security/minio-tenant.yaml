@@ -30,13 +30,13 @@ spec:
           configuration:
             name: glaciation-env-configuration
           pools:
-            - name: pool-0
+            - name: pool
               # Number of MinIO Tenant pods
-              servers: 4
+              servers: 2
               # Number of volumes per MinIO Tenant pod
-              volumesPerServer: 4
+              volumesPerServer: 2
               # Size of each volume
-              size: 10Gi
+              size: 1Gi
               # Storage class of the volumes
               storageClassName: local-path
               # Minimum and maximum resources requested for each pod

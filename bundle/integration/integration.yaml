@@ -1242,7 +1242,7 @@ spec:
         cluster:
           enabled: true
           extraRoutes: []
-          noAdvertise: false
+          noAdvertise: true
           replicas: 3
         k8sClusterDomain: cluster.local
         nats:
@@ -1272,8 +1272,14 @@ spec:
         websocket:
           allowedOrigins: []
           enabled: true
+          ingress:
+            className: nginx
+            hosts:
+            - nats-websocket.integration
+            path: /
+            pathType: Prefix
           noTLS: true
-          port: 443
+          port: 8080
           sameOrigin: false
     repoURL: https://nats-io.github.io/k8s/helm/charts
     targetRevision: 0.19.17

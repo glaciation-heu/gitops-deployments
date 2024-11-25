@@ -991,6 +991,39 @@ kind: Application
 metadata:
   annotations:
     argocd.argoproj.io/compare-options: ServerSideDiff=true
+    argocd.argoproj.io/sync-wave: "-30"
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+  name: minio
+  namespace: argocd
+spec:
+  destination:
+    namespace: minio-operator
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    chart: operator
+    helm:
+      valuesObject:
+        console:
+          ingress:
+            enabled: false
+        tenants: []
+    repoURL: https://operator.min.io
+    targetRevision: 5.0.14
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true
+    - ServerSideApply=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  annotations:
+    argocd.argoproj.io/compare-options: ServerSideDiff=true
   finalizers:
   - resources-finalizer.argocd.argoproj.io
   name: monitoring-stack
@@ -1111,6 +1144,68 @@ spec:
               memory: 1Gi
     repoURL: https://glaciation-heu.github.io/monitoring-stack/helm-charts/
     targetRevision: 1.0.*
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true
+    - ServerSideApply=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+  name: nats-jetstream
+  namespace: argocd
+spec:
+  destination:
+    namespace: dkg-engine
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    chart: nats
+    helm:
+      valuesObject:
+        cluster:
+          enabled: true
+          extraRoutes: []
+          noAdvertise: false
+          replicas: 3
+        k8sClusterDomain: cluster.local
+        nats:
+          jetstream:
+            domain: integration
+            enabled: true
+            encryption: null
+            fileStorage:
+              accessModes:
+              - ReadWriteOnce
+              annotations: null
+              enabled: true
+              size: 2Gi
+              storageClassName: longhorn
+              storageDirectory: /data
+            max_outstanding_catchup: null
+            memStorage:
+              enabled: true
+              size: 1Gi
+            uniqueTag: null
+          mqtt:
+            ackWait: 1m
+            enabled: true
+            maxAckPending: 100
+          serverNamePrefix: integration
+        useFQDN: true
+        websocket:
+          allowedOrigins: []
+          enabled: true
+          noTLS: true
+          port: 443
+          sameOrigin: false
+    repoURL: https://nats-io.github.io/k8s/helm/charts
+    targetRevision: 0.19.17
   syncPolicy:
     automated:
       prune: true

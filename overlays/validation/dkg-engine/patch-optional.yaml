@@ -63,3 +63,17 @@ spec:
     helm: 
       valuesObject: 
         ingressHostName: prediction.validation
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: nats-operator
+  namespace: argocd
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+spec:
+  source:
+    helm: 
+      valuesObject: 
+        cluster:
+          name: nats-validation

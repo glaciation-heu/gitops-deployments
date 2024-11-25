@@ -3,3 +3,4 @@ kind: Kustomization
 resources:
   - monitoring-stack.yaml
   - metrics-server.yaml
+  - minio.yaml

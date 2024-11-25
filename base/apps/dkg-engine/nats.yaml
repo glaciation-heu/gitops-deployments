@@ -129,7 +129,7 @@ spec:
         cluster:
           enabled: true
           replicas: 3
-          noAdvertise: false
+          noAdvertise: true
 
           # Explicitly set routes for clustering.
           # When JetStream is enabled, the serverName must be unique in the cluster.
@@ -141,11 +141,18 @@ spec:
           #   timeout: 0.5
         websocket:
           enabled: true
-          port: 443
+          port: 8080
           noTLS: true
 
           sameOrigin: false
           allowedOrigins: []
+          ingress:
+            className: nginx
+            path: /
+            pathType: Prefix
+            hosts:            
+              - nats-websocket.integration
+                
 
           # This will optionally specify what host:port for websocket
           # connections to be advertised in the cluster.

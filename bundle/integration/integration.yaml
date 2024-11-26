@@ -1234,6 +1234,11 @@ spec:
   destination:
     namespace: dkg-engine
     server: https://kubernetes.default.svc
+  ignoreDifferences:
+  - group: apps
+    jqPathExpressions:
+    - .spec.volumeClaimTemplates[]?
+    kind: StatefulSet
   project: default
   source:
     chart: nats
@@ -1262,7 +1267,7 @@ spec:
             memStorage:
               enabled: true
               size: 1Gi
-            uniqueTag: null
+            uniqueTag: integration
           mqtt:
             ackWait: 1m
             enabled: true
@@ -1290,6 +1295,7 @@ spec:
     syncOptions:
     - CreateNamespace=true
     - ServerSideApply=true
+    - RespectIgnoreDifferences=true
 ---
 apiVersion: argoproj.io/v1alpha1
 kind: Application

@@ -15,10 +15,13 @@ spec:
       valuesObject:
         ingress:
           hosts:
-            databaseController: database-controller.integration
             dataGenerator: data-generator.integration
-            plugin: plugin.integration
+            databaseController: database-controller.integration
             model: model.integration
+            # external: external.integration
+            prescoreplugin: prescoreplugin.integration
+            scoreplugin: scoreplugin.integration
+            cacheservice: cacheservice.integration
   destination:
     namespace: idmg
     server: https://kubernetes.default.svc

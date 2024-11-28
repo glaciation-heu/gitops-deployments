@@ -5,7 +5,6 @@ metadata:
   name: vault
   namespace: argocd
   annotations:
-    # argocd.argoproj.io/hook: Sync
     argocd.argoproj.io/compare-options: ServerSideDiff=true
     argocd.argoproj.io/sync-wave: "-20"
   finalizers:

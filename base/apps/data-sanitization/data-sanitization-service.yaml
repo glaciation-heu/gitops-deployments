@@ -12,7 +12,7 @@ spec:
   sources:
   - repoURL: https://glaciation-heu.github.io/data-sanitization-service
     chart: data-sanitization
-    targetRevision: 0.2.2
+    targetRevision: 0.2.3
     helm:
       valuesObject:
         secret:

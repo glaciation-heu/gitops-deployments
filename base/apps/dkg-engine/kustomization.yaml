@@ -10,3 +10,4 @@ resources:
   - kg-exporter.yaml
   - nats.yaml
   - dkg-tenant.yaml
+  - replica-service.yaml

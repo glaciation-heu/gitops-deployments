@@ -63,3 +63,25 @@ spec:
     helm: 
       valuesObject: 
         ingressHostName: prediction.validation
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: dkg-tenant
+  namespace: argocd
+spec:
+  source:
+    helm: 
+      valuesObject: 
+        ingressHostName: dkg-tenant.validation
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: replica-service
+  namespace: argocd
+spec:
+  source:
+    helm:
+      valuesObject:
+        secretKey: "162ba197542be77b3e525f3afec7b0ad54b89997b64c5df72d0e9993bbc9efcc"

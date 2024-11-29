@@ -1,0 +1,65 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: replica-service
+  namespace: argocd
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+spec:
+  destination:
+    namespace: dkg-engine
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    repoURL: https://HIRO-MicroDataCenters-BV.github.io/rhio/helm-charts/
+    chart: rhio
+    targetRevision: 0.*.*
+    helm:
+      valuesObject:
+        secretKey: "<not set>"
+
+        tolerations:
+          - key: "node-role.kubernetes.io/control-plane"
+            operator: "Equal"
+            effect: "NoSchedule"        
+
+        nodeSelector:
+          master: "true"
+
+        services:
+          type: ClusterIP
+          # the port for the p2p networking endpoint
+          network:
+            port: 9102
+            # nodePort: 31100
+          # the port for the HTTP health endpoint
+          health:
+            port: 8080
+
+        configuration:
+          s3:
+            endpoint: "http://minio.dkg-engine.svc.cluster.local:9000"
+            region: "eu-central-1"
+            credentials:
+              access_key: "minio"
+              secret_key: "minio123"
+
+          # NATS
+          # Endpoint of the local NATS Server with JetStreams enabled.
+          #
+          nats:
+            endpoint: "nats-jetstream.dkg-engine.svc.cluster.local:4222"
+          #   credentials:
+          #     username: "rhio"
+          #     password: "rhio_password"
+          #     # Alternative authentication strategies:
+          #     nkey: "..."
+          #     token: "..."
+
+  syncPolicy:
+    automated:
+     prune: true
+     selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

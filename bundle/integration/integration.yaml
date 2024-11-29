@@ -1417,6 +1417,54 @@ spec:
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+  name: replica-service
+  namespace: argocd
+spec:
+  destination:
+    namespace: dkg-engine
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    chart: rhio
+    helm:
+      valuesObject:
+        configuration:
+          nats:
+            endpoint: nats-jetstream.dkg-engine.svc.cluster.local:4222
+          s3:
+            credentials:
+              access_key: minio
+              secret_key: minio123
+            endpoint: http://minio.dkg-engine.svc.cluster.local:9000
+            region: eu-central-1
+        nodeSelector:
+          master: "true"
+        secretKey: <not set>
+        services:
+          health:
+            port: 8080
+          network:
+            port: 9102
+          type: ClusterIP
+        tolerations:
+        - effect: NoSchedule
+          key: node-role.kubernetes.io/control-plane
+          operator: Equal
+    repoURL: https://HIRO-MicroDataCenters-BV.github.io/rhio/helm-charts/
+    targetRevision: 0.*.*
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true
+    - ServerSideApply=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
   annotations:
     argocd.argoproj.io/hook: Sync
     argocd.argoproj.io/sync-wave: "-8"

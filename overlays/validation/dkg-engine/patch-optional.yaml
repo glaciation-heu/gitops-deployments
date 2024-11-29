@@ -84,4 +84,4 @@ spec:
   source:
     helm:
       valuesObject:
-        secretKey: "162ba197542be77b3e525f3afec7b0ad54b89997b64c5df72d0e9993bbc9efcc"
+        secretKey: 162ba197542be77b3e525f3afec7b0ad54b89997b64c5df72d0e9993bbc9efcc

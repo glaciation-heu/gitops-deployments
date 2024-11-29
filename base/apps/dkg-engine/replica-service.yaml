@@ -16,7 +16,7 @@ spec:
     targetRevision: 0.*.*
     helm:
       valuesObject:
-        secretKey: "<not set>"
+        secretKey: 327c1a11f06ab80de030e5ff6e879a5b3fedd5be3df0fb43e7328ae0843c8cb1 # the key for integration cluster
 
         tolerations:
           - key: "node-role.kubernetes.io/control-plane"

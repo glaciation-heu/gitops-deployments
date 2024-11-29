@@ -1441,7 +1441,7 @@ spec:
             region: eu-central-1
         nodeSelector:
           master: "true"
-        secretKey: 327c1a11f06ab80de030e5ff6e879a5b3fedd5be3df0fb43e7328ae0843c8cb1
+        secretKey: "3366656464356265336466306662343365373332386165303834336338636231"
         services:
           health:
             port: 8080

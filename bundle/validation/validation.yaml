@@ -484,6 +484,10 @@ spec:
     namespace: dkg-engine
     server: https://kubernetes.default.svc
   project: default
+  source:
+    helm:
+      valuesObject:
+        ingressHostName: dkg-tenant.validation
   sources:
   - chart: tenant
     helm:
@@ -1444,6 +1448,54 @@ spec:
       valuesObject:
         ingressHostName: prediction.validation
     repoURL: https://glaciation-heu.github.io/glaciation-prediction-service/helm-charts/
+    targetRevision: 0.*.*
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true
+    - ServerSideApply=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+  name: replica-service
+  namespace: argocd
+spec:
+  destination:
+    namespace: dkg-engine
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    chart: rhio
+    helm:
+      valuesObject:
+        configuration:
+          nats:
+            endpoint: nats-jetstream.dkg-engine.svc.cluster.local:4222
+          s3:
+            credentials:
+              access_key: minio
+              secret_key: minio123
+            endpoint: http://minio.dkg-engine.svc.cluster.local:9000
+            region: eu-central-1
+        nodeSelector:
+          master: "true"
+        secretKey: 162ba197542be77b3e525f3afec7b0ad54b89997b64c5df72d0e9993bbc9efcc
+        services:
+          health:
+            port: 8080
+          network:
+            port: 9102
+          type: ClusterIP
+        tolerations:
+        - effect: NoSchedule
+          key: node-role.kubernetes.io/control-plane
+          operator: Equal
+    repoURL: https://HIRO-MicroDataCenters-BV.github.io/rhio/helm-charts/
     targetRevision: 0.*.*
   syncPolicy:
     automated:

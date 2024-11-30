@@ -5,7 +5,7 @@ metadata:
   namespace: vault
   annotations:
     argocd.argoproj.io/hook: Sync
-    argocd.argoproj.io/sync-wave: "-20"
+    argocd.argoproj.io/sync-wave: "-9"
 spec:
   template:
     spec:
@@ -35,6 +35,9 @@ spec:
           echo '[*] Initialize HA Vault cluster'
           # Wait for the startup of the Vault pods
           sleep 30 # it does the job without requiring to create an ad hoc image
+          if vault operator init -address=https://vault-0.vault-internal:8200 -status; then
+            exit 0
+          fi
           # TODO: Persist PGP encrypted Vault unseal keys somewhere outside the cluster
           vault operator init \
             -address=https://vault-0.vault-internal:8200 \

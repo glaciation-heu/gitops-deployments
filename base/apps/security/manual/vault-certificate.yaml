@@ -1,4 +1,3 @@
----
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
@@ -6,7 +5,7 @@ metadata:
   namespace: vault
   annotations:    
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
-    argocd.argoproj.io/sync-wave: "-25"
+    argocd.argoproj.io/sync-wave: "-24"
 spec:
   secretName: vault-tls
   issuerRef:

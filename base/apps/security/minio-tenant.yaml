@@ -72,7 +72,7 @@ spec:
             - name: uc1
             - name: uc2
             - name: uc3
-            - name: sanitization
+            - name: uc4
           # Define configuration for KES (stateless and distributed key-management
           # system)
           kes:

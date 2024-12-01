@@ -14,7 +14,6 @@ metadata:
   name: spark-operator
   namespace: argocd
   annotations:
-    argocd.argoproj.io/hook: Sync
     argocd.argoproj.io/sync-wave: "-8"
   finalizers:
   - resources-finalizer.argocd.argoproj.io

@@ -4,7 +4,6 @@ metadata:
   name: init-vault-cluster
   namespace: vault
   annotations:
-    argocd.argoproj.io/hook: Sync
     argocd.argoproj.io/sync-wave: "-9"
 spec:
   template:

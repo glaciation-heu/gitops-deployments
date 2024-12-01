@@ -9,8 +9,8 @@ resources:
   - ./manual/vault-certificate.yaml
   - ./manual/vault-init.yaml
   - cert-manager.yaml
-  - gatekeeper.yaml
   - gatekeeper-policy-manager.yaml
+  - gatekeeper.yaml
   - minio-tenant.yaml
   - replicator.yaml
   - trust-manager.yaml

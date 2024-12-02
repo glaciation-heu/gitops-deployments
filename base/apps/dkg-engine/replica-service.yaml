@@ -26,19 +26,27 @@ spec:
         nodeSelector:
           master: "true"
 
+        debug: =DEBUG
+
         services:
-          type: ClusterIP
+          type: NodePort
           # the port for the p2p networking endpoint
           network:
             port: 9102
-            # nodePort: 31100
+            nodePort: 31100
           # the port for the HTTP health endpoint
           health:
             port: 8080
 
         configuration:
+
+          nodes:
+            - public_key: "b2030d8df6c0a8bc53513e1c1746446ff00424e39f0ba25441f76b3d68752b8c"
+              endpoints:
+                - "10.14.2.5:31100"
+
           s3:
-            endpoint: "http://minio.dkg-engine.svc.cluster.local:9000"
+            endpoint: "http://dkg-hl.dkg-engine.svc.cluster.local:9000"
             region: "eu-central-1"
             credentials:
               access_key: "minio"
@@ -55,6 +63,31 @@ spec:
           #     # Alternative authentication strategies:
           #     nkey: "..."
           #     token: "..."
+
+          publish:
+            # We're publishing all files given in our local bucket.
+            #
+            # s3_buckets:
+            #   - "one"
+
+            # We're publishing any NATS message matching this NATS subject (wildcards
+            # supported) coming from our local JetStream.
+            #
+            nats_subjects:
+              - subject: "dkg-engine.energy.integration"
+                stream: "dkg-stream"
+
+          subscribe:
+
+            nats_subjects:
+              - subject: "dkg-engine.energy.validation"
+                public_key: "b2030d8df6c0a8bc53513e1c1746446ff00424e39f0ba25441f76b3d68752b8c"
+                stream: "dkg-stream"
+
+            # s3_buckets:
+            #   - public_key: "b2030d8df6c0a8bc53513e1c1746446ff00424e39f0ba25441f76b3d68752b8c"
+            #     remote_bucket: "two"
+            #     local_bucket: "two"
 
   syncPolicy:
     automated:

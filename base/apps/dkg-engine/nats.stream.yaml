@@ -1,0 +1,11 @@
+---
+apiVersion: jetstream.nats.io/v1beta2
+kind: Stream
+metadata:
+  name: nats-stream
+  namespace: dkg-engine
+spec:
+  name: dkg-stream
+  subjects: ["dkg-engine.energy.validation", "dkg-engine.energy.integration"]
+  storage: file
+  replicas: 1

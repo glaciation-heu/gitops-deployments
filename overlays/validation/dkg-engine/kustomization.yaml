@@ -4,3 +4,43 @@ resources:
   - ../../../base/apps/dkg-engine
 patches:
   - path: patch-optional.yaml
+  - patch: |-
+      - op: replace
+        path: /spec/sources/0/helm/valuesObject/ingress/api/host
+        value: dkg-tenant.validation
+    target:
+      group: argoproj.io
+      version: v1alpha1
+      kind: Application
+      name: dkg-tenant
+      namespace: argocd
+  - patch: |-
+      - op: replace
+        path: /spec/sources/0/helm/valuesObject/ingress/console/host
+        value: dkg-tenant-console.validation
+    target:
+      group: argoproj.io
+      version: v1alpha1
+      kind: Application
+      name: dkg-tenant
+      namespace: argocd
+  - patch: |-
+      - op: replace
+        path: /spec/source/helm/valuesObject/config/serverNamePrefix
+        value: validation
+    target:
+      group: argoproj.io
+      version: v1alpha1
+      kind: Application
+      name: nats-jetstream
+      namespace: argocd
+  - patch: |-
+      - op: replace
+        path: /spec/source/helm/valuesObject/config/websocket/ingress/hosts
+        value: [ "nats-websocket.integration" ]
+    target:
+      group: argoproj.io
+      version: v1alpha1
+      kind: Application
+      name: nats-jetstream
+      namespace: argocd

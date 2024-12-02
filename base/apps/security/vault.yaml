@@ -54,11 +54,11 @@ spec:
           dataStorage:
             enabled: true
             size: 10Gi
-            storageClass: local-path
+            storageClass: longhorn
           auditStorage:
             enabled: true
             size: 10Gi
-            storageClass: local-path
+            storageClass: longhorn
           ui:
             enabled: true
           ingress:

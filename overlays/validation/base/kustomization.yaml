@@ -4,6 +4,7 @@ resources:
   - ../../../base/argocd
   - ../../../base/apps/base
 patches:
+  - path: patch-waves.yaml
   - path: patch-optional.yaml
   - patch: |-
       - op: replace

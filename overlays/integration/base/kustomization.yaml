@@ -3,3 +3,5 @@ kind: Kustomization
 resources:
   - ../../../base/argocd
   - ../../../base/apps/base
+patches:
+  - path: patch-waves.yaml  

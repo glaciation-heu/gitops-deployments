@@ -36,7 +36,7 @@ spec:
               # Size of each volume
               size: 1Gi
               # Storage class of the volumes
-              storageClassName: longhorn
+              storageClassName: local-path
               # Minimum and maximum resources requested for each pod
               resources:
                 requests:

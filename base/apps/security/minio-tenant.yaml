@@ -24,8 +24,7 @@ spec:
 
         tenant:
           name: glaciation
-          # Kubernetes secret name that contains MinIO environment variable
-          # configurations
+          # Kubernetes secret name that contains the root MinIO user credentials
           configuration:
             name: glaciation-env-configuration
           pools:
@@ -133,7 +132,8 @@ spec:
             #   # NOTE: To make sure the certificate is trusted by clients we should use
             #   # something like Let's Encrypt
             #   cert-manager.io/cluster-issuer: "private-ca-issuer"
-              nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+              nginx.org/redirect-to-https: "true"
+              nginx.org/ssl-services: "minio"
             # tls:
             # - hosts:
             #   - glaciation-tenant.integration
@@ -148,7 +148,8 @@ spec:
             #   # NOTE: To make sure the certificate is trusted by clients we should use
             #   # something like Let's Encrypt
             #   cert-manager.io/cluster-issuer: "private-ca-issuer"
-              nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+              nginx.org/redirect-to-https: "true"
+              nginx.org/ssl-services: "glaciation-console"
             # tls:
             # - hosts:
             #   - glaciation-tenant-console.integration

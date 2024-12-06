@@ -23,6 +23,8 @@ spec:
           admin:
             user: admin          
             password: jenkins
+          JCasC:
+            authorizationStrategy: "loggedInUsersCanDoAnything:\n  allowAnonymousRead: true"
         ingress:
           enabled: false
         persistence:

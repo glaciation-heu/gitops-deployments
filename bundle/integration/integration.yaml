@@ -1702,6 +1702,10 @@ spec:
     helm:
       valuesObject:
         controller:
+          JCasC:
+            authorizationStrategy: |-
+              loggedInUsersCanDoAnything:
+                allowAnonymousRead: true
           admin:
             password: jenkins
             user: admin

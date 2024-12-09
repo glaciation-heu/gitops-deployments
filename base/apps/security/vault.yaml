@@ -1,13 +1,11 @@
----
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   name: vault
   namespace: argocd
   annotations:
-    # argocd.argoproj.io/hook: Sync
     argocd.argoproj.io/compare-options: ServerSideDiff=true
-    argocd.argoproj.io/sync-wave: "-20"
+    argocd.argoproj.io/sync-wave: "-9"
   finalizers:
    - resources-finalizer.argocd.argoproj.io
 spec:
@@ -56,11 +54,11 @@ spec:
           dataStorage:
             enabled: true
             size: 10Gi
-            storageClass: local-path
+            storageClass: longhorn
           auditStorage:
             enabled: true
             size: 10Gi
-            storageClass: local-path
+            storageClass: longhorn
           ui:
             enabled: true
           ingress:

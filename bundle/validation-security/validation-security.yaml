@@ -1,171 +1,11 @@
-apiVersion: v1
-kind: Namespace
-metadata:
-  annotations:
-    argocd.argoproj.io/hook: PreSync
-    argocd.argoproj.io/sync-wave: "-3"
-  labels:
-    create-ca-bundle: "true"
-  name: spark-app
----
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  annotations:
-    argocd.argoproj.io/hook: PostSync
-    argocd.argoproj.io/hook-delete-policy: HookSucceeded
-  name: gatekeeper-smoke-test
-  namespace: gatekeeper-system
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  annotations:
-    argocd.argoproj.io/hook: PostSync
-    argocd.argoproj.io/hook-delete-policy: HookSucceeded
-  name: gatekeeper-smoke-test
-rules:
-- apiGroups:
-  - templates.gatekeeper.sh
-  resources:
-  - constrainttemplates
-  verbs:
-  - create
-  - delete
-- apiGroups:
-  - constraints.gatekeeper.sh
-  resources:
-  - k8sallowedrepos
-  verbs:
-  - create
-  - delete
-- apiGroups:
-  - ""
-  resources:
-  - pods
-  verbs:
-  - create
-  - delete
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  annotations:
-    argocd.argoproj.io/hook: PostSync
-    argocd.argoproj.io/hook-delete-policy: HookSucceeded
-  name: gatekeeper-smoke-test
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: gatekeeper-smoke-test
-subjects:
-- kind: ServiceAccount
-  name: gatekeeper-smoke-test
-  namespace: gatekeeper-system
----
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   annotations:
-    argocd.argoproj.io/sync-wave: "-30"
+    argocd.argoproj.io/sync-wave: "-12"
   finalizers:
   - resources-finalizer.argocd.argoproj.io
-  name: cert-manager
-  namespace: argocd
-spec:
-  destination:
-    namespace: cert-manager
-    server: https://kubernetes.default.svc
-  project: default
-  source:
-    chart: cert-manager
-    helm:
-      parameters:
-      - forceString: true
-        name: installCRDs
-        value: "true"
-      values: |-
-        cert-manager:
-          installCRDs: true
-    repoURL: https://charts.jetstack.io
-    targetRevision: v1.14.5
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
-    syncOptions:
-    - CreateNamespace=true
-    - ServerSideApply=true
----
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  annotations:
-    argocd.argoproj.io/hook: Sync
-    argocd.argoproj.io/sync-wave: "-2"
-  finalizers:
-  - resources-finalizer.argocd.argoproj.io
-  name: data-sanitization
-  namespace: argocd
-spec:
-  destination:
-    namespace: spark-app
-    server: https://kubernetes.default.svc
-  project: default
-  sources:
-  - chart: data-sanitization
-    helm:
-      valuesObject:
-        ingress:
-          className: nginx
-          enabled: true
-          hosts:
-          - host: data-sanitization.validation
-            paths:
-            - path: /
-              pathType: Prefix
-        resources:
-          limits:
-            cpu: 500m
-            memory: 1024Mi
-          requests:
-            cpu: 250m
-            memory: 512Mi
-        s3:
-          accessKeyId: minio
-          certificate: /etc/ssl/certs/ca.crt
-          endpoint: minio.minio-tenant.svc.cluster.local
-          secretAccessKey: minio123
-        secret:
-          create: true
-          name: minio-credentials
-        volumeMounts:
-        - mountPath: /etc/ssl/certs/ca.crt
-          name: ca-bundle
-          readOnly: true
-          subPath: ca.crt
-        volumes:
-        - configMap:
-            defaultMode: 422
-            name: ca-bundle
-          name: ca-bundle
-    repoURL: https://glaciation-heu.github.io/data-sanitization-service
-    targetRevision: 0.2.2
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
-    syncOptions:
-    - ServerSideApply=true
----
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  annotations:
-    argocd.argoproj.io/sync-wave: "-30"
-  finalizers:
-  - resources-finalizer.argocd.argoproj.io
-  name: gatekeeper
+  name: admission-control
   namespace: argocd
 spec:
   destination:
@@ -173,29 +13,9 @@ spec:
     server: https://kubernetes.default.svc
   project: default
   source:
-    chart: gatekeeper
-    helm:
-      values: |
-        postInstall:
-          labelNamespace:
-            extraRules:
-            - apiGroups:
-              - management.cattle.io
-              resources:
-              - projects
-              verbs:
-              - updatepsa
-      valuesObject:
-        audit:
-          resources:
-            limits:
-              cpu: 500m
-        controllerManager:
-          resources:
-            limits:
-              cpu: 500m
-    repoURL: https://open-policy-agent.github.io/gatekeeper/charts
-    targetRevision: 3.15.1
+    chart: admission-control
+    repoURL: https://glaciation-heu.github.io/security/helm-charts
+    targetRevision: 1.0.*
   syncPolicy:
     automated:
       prune: true
@@ -208,7 +28,171 @@ apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   annotations:
-    argocd.argoproj.io/sync-wave: "-30"
+    argocd.argoproj.io/sync-wave: "-11"
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+  name: certificate-management
+  namespace: argocd
+spec:
+  destination:
+    namespace: cert-manager
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    chart: certificate-management
+    repoURL: https://glaciation-heu.github.io/security/helm-charts
+    targetRevision: 1.0.*
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true
+    - ServerSideApply=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+  name: data-sanitization
+  namespace: argocd
+spec:
+  destination:
+    namespace: spark-operator
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    chart: data-sanitization
+    helm:
+      valuesObject:
+        data-sanitization:
+          ingress:
+            annotations:
+              cert-manager.io/cluster-issuer: private-ca-issuer
+            className: nginx
+            enabled: true
+            hosts:
+            - host: data-sanitization.validation
+              paths:
+              - path: /
+                pathType: Prefix
+            tls:
+            - hosts:
+              - data-sanitization.validation
+              secretName: data-sanitization-ingress
+        spark-history-server:
+          ingress:
+            annotations:
+              cert-manager.io/cluster-issuer: private-ca-issuer
+            className: nginx
+            enabled: true
+            hosts:
+            - host: spark-history-server.validation
+              paths:
+              - path: /
+                pathType: Prefix
+            tls:
+            - hosts:
+              - spark-history-server.validation
+              secretName: spark-history-server-ingress
+    repoURL: https://glaciation-heu.github.io/security/helm-charts
+    targetRevision: 1.0.*
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true
+    - ServerSideApply=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  annotations:
+    argocd.argoproj.io/compare-options: ServerSideDiff=true
+    argocd.argoproj.io/sync-wave: "-10"
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+  name: data-wrapping
+  namespace: argocd
+spec:
+  destination:
+    namespace: data-wrapping
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    chart: data-wrapping
+    helm:
+      valuesObject:
+        tenant:
+          ingress:
+            api:
+              annotations:
+                cert-manager.io/cluster-issuer: private-ca-issuer
+                ingress.kubernetes.io/ssl-redirect: "true"
+                nginx.org/redirect-to-https: "true"
+                nginx.org/ssl-services: minio
+              enabled: true
+              host: glaciation-tenant.validation
+              ingressClassName: nginx
+              path: /
+              pathType: Prefix
+              tls:
+              - hosts:
+                - glaciation-tenant.validation
+                secretName: minio-tenant-ingress
+            console:
+              annotations:
+                cert-manager.io/cluster-issuer: private-ca-issuer
+                ingress.kubernetes.io/ssl-redirect: "true"
+                nginx.org/redirect-to-https: "true"
+                nginx.org/ssl-services: glaciation-console
+              enabled: true
+              host: glaciation-tenant-console.validation
+              ingressClassName: nginx
+              path: /
+              pathType: Prefix
+              tls:
+              - hosts:
+                - glaciation-tenant-console.validation
+                secretName: minio-tenant-console-ingress
+        vault:
+          server:
+            auditStorage:
+              size: 1Gi
+              storageClass: longhorn
+            dataStorage:
+              size: 1Gi
+              storageClass: longhorn
+            ingress:
+              activeService: false
+              annotations:
+                cert-manager.io/cluster-issuer: private-ca-issuer
+                ingress.kubernetes.io/ssl-redirect: "true"
+                nginx.org/redirect-to-https: "true"
+                nginx.org/ssl-services: data-wrapping-vault
+              enabled: true
+              hosts:
+              - host: vault.validation
+              ingressClassName: nginx
+              tls:
+              - hosts:
+                - vault.validation
+                secretName: vault-ingress
+    repoURL: https://glaciation-heu.github.io/security/helm-charts
+    targetRevision: 1.0.*
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=false
+    - ServerSideApply=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
   finalizers:
   - resources-finalizer.argocd.argoproj.io
   name: gatekeeper-policy-manager
@@ -225,6 +209,8 @@ spec:
         config:
           secretKey: supersecuresecretkey
         ingress:
+          annotations:
+            cert-manager.io/cluster-issuer: private-ca-issuer
           enabled: true
           hosts:
           - host: gpm.validation
@@ -232,6 +218,10 @@ spec:
             paths:
             - /
           ingressClassName: nginx
+          tls:
+          - hosts:
+            - gpm.validation
+            secretName: gpm-ingress
     repoURL: https://sighupio.github.io/gatekeeper-policy-manager
     targetRevision: 0.10.0
   syncPolicy:
@@ -241,785 +231,3 @@ spec:
     syncOptions:
     - CreateNamespace=true
     - ServerSideApply=true
----
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  annotations:
-    argocd.argoproj.io/compare-options: ServerSideDiff=true
-    argocd.argoproj.io/sync-wave: "-4"
-  finalizers:
-  - resources-finalizer.argocd.argoproj.io
-  name: minio-tenant
-  namespace: argocd
-spec:
-  destination:
-    namespace: minio-tenant
-    server: https://kubernetes.default.svc
-  project: default
-  sources:
-  - chart: tenant
-    helm:
-      valuesObject:
-        ingress:
-          api:
-            annotations:
-              nginx.ingress.kubernetes.io/backend-protocol: HTTPS
-            enabled: true
-            host: glaciation-tenant.integration
-            ingressClassName: nginx
-            path: /
-            pathType: Prefix
-          console:
-            annotations:
-              nginx.ingress.kubernetes.io/backend-protocol: HTTPS
-            enabled: true
-            host: glaciation-tenant-console.integration
-            ingressClassName: nginx
-            path: /
-            pathType: Prefix
-        secrets:
-          accessKey: minio
-          name: glaciation-env-configuration
-          secretKey: minio123
-        tenant:
-          buckets:
-          - name: uc1
-          - name: uc2
-          - name: uc3
-          - name: sanitization
-          certificate:
-            requestAutoCert: true
-          configuration:
-            name: glaciation-env-configuration
-          kes:
-            clientCertSecret:
-              name: ca-bundle
-              type: kubernetes.io/tls
-            configuration: |-
-              address: :7373
-              tls:
-                key: /tmp/kes/server.key # Path to the TLS private key
-                cert: /tmp/kes/server.crt # Path to the TLS certificate
-              admin:
-                identity: ${MINIO_KES_IDENTITY}
-              cache:
-                expiry:
-                  any: 5m0s
-                  unused: 20s
-              log:
-                error: on
-                audit: off
-              keystore:
-                vault:
-                  endpoint: "https://vault-internal.vault.svc.cluster.local:8200"
-                  version: v2
-                  prefix: "minio-tenant" # Vault will store keys under this prefix
-                  kubernetes:
-                    role: "minio-kes"
-                    jwt: "/var/run/secrets/kubernetes.io/serviceaccount/token"
-                  tls: # The Vault client TLS configuration for certificate verification
-                    ca: "/tmp/kes/ca.crt" # Path to PEM root CA certificates
-                  status:
-                    ping: 10s # Duration until the server checks Vault's status again
-            containerSecurityContext:
-              allowPrivilegeEscalation: false
-              runAsGroup: 1000
-              runAsNonRoot: true
-              runAsUser: 1000
-            image:
-              repository: quay.io/minio/kes
-              tag: 2024-03-13T17-52-13Z
-            imagePullPolicy: IfNotPresent
-            keyName: encryption-key
-            replicas: 2
-            securityContext:
-              fsGroup: 1000
-              runAsGroup: 1000
-              runAsNonRoot: true
-              runAsUser: 1000
-            serviceAccountName: minio-kes
-          name: glaciation
-          pools:
-          - containerSecurityContext:
-              allowPrivilegeEscalation: false
-              capabilities:
-                drop:
-                - ALL
-              runAsGroup: 1000
-              runAsNonRoot: true
-              runAsUser: 1000
-              seccompProfile:
-                type: RuntimeDefault
-            name: pool
-            resources:
-              limits:
-                cpu: 2
-                memory: 4Gi
-              requests:
-                cpu: 1
-                memory: 2Gi
-            securityContext:
-              fsGroup: 1000
-              fsGroupChangePolicy: OnRootMismatch
-              runAsGroup: 1000
-              runAsNonRoot: true
-              runAsUser: 1000
-            servers: 2
-            size: 1Gi
-            storageClassName: local-path
-            volumesPerServer: 2
-    repoURL: https://operator.min.io
-    targetRevision: 5.0.14
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
-    syncOptions:
-    - ServerSideApply=true
----
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  annotations:
-    argocd.argoproj.io/sync-wave: "-22"
-  finalizers:
-  - resources-finalizer.argocd.argoproj.io
-  name: replicator
-  namespace: argocd
-spec:
-  destination:
-    namespace: replicator
-    server: https://kubernetes.default.svc
-  project: default
-  source:
-    chart: kubernetes-replicator
-    repoURL: https://helm.mittwald.de
-    targetRevision: 2.9.2
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
-    syncOptions:
-    - CreateNamespace=true
-    - ServerSideApply=true
----
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  annotations:
-    argocd.argoproj.io/hook: Sync
-    argocd.argoproj.io/sync-wave: "-3"
-  finalizers:
-  - resources-finalizer.argocd.argoproj.io
-  name: spark-history-server
-  namespace: argocd
-spec:
-  destination:
-    namespace: spark-app
-    server: https://kubernetes.default.svc
-  project: default
-  sources:
-  - chart: spark-history-server
-    helm:
-      valuesObject:
-        ingress:
-          className: nginx
-          enabled: true
-          hosts:
-          - host: spark-history-server.validation
-            paths:
-            - path: /
-              pathType: Prefix
-        resources:
-          limits:
-            cpu: 500m
-            memory: 1024Mi
-          requests:
-            cpu: 250m
-            memory: 512Mi
-        s3:
-          bucket: sanitization/spark-events
-          endpoint: minio.minio-tenant.svc.cluster.local
-        secret:
-          create: false
-          name: minio-credentials
-        volumeMounts:
-        - mountPath: /etc/ssl/certs/ca.crt
-          name: ca
-          readOnly: true
-          subPath: ca.crt
-        - mountPath: /opt/java/openjdk/lib/security/cacerts
-          name: ca
-          readOnly: true
-          subPath: ca.jks
-        volumes:
-        - configMap:
-            defaultMode: 422
-            name: ca-bundle
-          name: ca
-    repoURL: https://glaciation-heu.github.io/spark-history-server
-    targetRevision: 1.0.3
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
-    syncOptions:
-    - ServerSideApply=true
----
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  annotations:
-    argocd.argoproj.io/hook: Sync
-    argocd.argoproj.io/sync-wave: "-3"
-  finalizers:
-  - resources-finalizer.argocd.argoproj.io
-  name: spark-operator
-  namespace: argocd
-spec:
-  destination:
-    namespace: spark-operator
-    server: https://kubernetes.default.svc
-  project: default
-  source:
-    chart: spark-operator
-    helm:
-      valuesObject:
-        sparkJobNamespaces:
-        - spark-app
-        webhook:
-          enable: true
-    repoURL: https://kubeflow.github.io/spark-operator/
-    targetRevision: 1.2.14
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
-    syncOptions:
-    - CreateNamespace=true
-    - ServerSideApply=true
----
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  annotations:
-    argocd.argoproj.io/sync-wave: "-30"
-  finalizers:
-  - resources-finalizer.argocd.argoproj.io
-  name: trust-manager
-  namespace: argocd
-spec:
-  destination:
-    namespace: cert-manager
-    server: https://kubernetes.default.svc
-  project: default
-  source:
-    chart: trust-manager
-    helm:
-      valuesObject:
-        podDisruptionBudget:
-          enabled: true
-        replicaCount: 2
-        secretTargets:
-          authorizedSecrets:
-          - ca-bundle
-          enabled: true
-    repoURL: https://charts.jetstack.io
-    targetRevision: v0.9.2
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
-    syncOptions:
-    - ServerSideApply=true
----
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  annotations:
-    argocd.argoproj.io/compare-options: ServerSideDiff=true
-    argocd.argoproj.io/sync-wave: "-20"
-  finalizers:
-  - resources-finalizer.argocd.argoproj.io
-  name: vault
-  namespace: argocd
-spec:
-  destination:
-    namespace: vault
-    server: https://kubernetes.default.svc
-  project: default
-  sources:
-  - chart: vault
-    helm:
-      valuesObject:
-        global:
-          enabled: true
-          tlsDisable: false
-        injector:
-          enabled: false
-        server:
-          affinity: ""
-          auditStorage:
-            enabled: true
-            size: 10Gi
-            storageClass: local-path
-          dataStorage:
-            enabled: true
-            size: 10Gi
-            storageClass: local-path
-          enabled: true
-          extraEnvironmentVars:
-            VAULT_CACERT: /vault/userconfig/vault-tls/ca.crt
-            VAULT_TLSCERT: /vault/userconfig/vault-tls/tls.crt
-            VAULT_TLSKEY: /vault/userconfig/vault-tls/tls.key
-          ha:
-            enabled: true
-            raft:
-              config: |
-                disable_mlock = true
-                ui = true
-
-                listener "tcp" {
-                  address = "[::]:8200"
-                  cluster_address = "[::]:8201"
-                  tls_cert_file = "/vault/userconfig/vault-tls/tls.crt"
-                  tls_key_file  = "/vault/userconfig/vault-tls/tls.key"
-                  tls_client_ca_file = "/vault/userconfig/vault-tls/ca.crt"
-                }
-
-                storage "raft" {
-                  path = "/vault/data"
-                }
-
-                service_registration "kubernetes" {}
-              enabled: true
-              setNodeId: true
-            replicas: 3
-          ingress:
-            activeService: false
-            annotations:
-              nginx.ingress.kubernetes.io/backend-protocol: HTTPS
-            enabled: true
-            hosts:
-            - host: vault.validation
-            ingressClassName: nginx
-          resources:
-            limits:
-              cpu: 250m
-              memory: 256Mi
-            requests:
-              cpu: 250m
-              memory: 256Mi
-          service:
-            active:
-              enabled: false
-            enabled: true
-            standby:
-              enabled: false
-          standalone:
-            enabled: false
-          ui:
-            enabled: true
-          volumeMounts:
-          - mountPath: /vault/userconfig/vault-tls
-            name: userconfig-vault-tls
-            readOnly: true
-          volumes:
-          - name: userconfig-vault-tls
-            secret:
-              defaultMode: 420
-              secretName: vault-tls
-    repoURL: https://helm.releases.hashicorp.com
-    targetRevision: 0.28.0
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
-    syncOptions:
-    - ServerSideApply=true
----
-apiVersion: batch/v1
-kind: Job
-metadata:
-  annotations:
-    argocd.argoproj.io/hook: PostSync
-    argocd.argoproj.io/hook-delete-policy: HookSucceeded
-  name: gatekeeper-smoke-test
-  namespace: gatekeeper-system
-spec:
-  backoffLimit: 5
-  template:
-    spec:
-      containers:
-      - command:
-        - /bin/sh
-        - -c
-        - |
-          # Check status of the Gatekeeper service
-          (
-            set -e; # make sure the job fails if any instruction fails
-
-            # Some of the following commands are meant to fail to prove the
-            # successful enforcement of the policy. With the suffix '&& exit 1'
-            # we force to exit with an error status whenever these commands are
-            # executed successfully.
-            # NOTE: This is not the same as the ! operator.
-
-            kubectl create -f https://raw.githubusercontent.com/unibg-seclab/glaciation-gitops-test/main/resources/template.yaml;
-            kubectl create -f https://raw.githubusercontent.com/unibg-seclab/glaciation-gitops-test/main/resources/constraint.yaml;
-            kubectl create -f https://raw.githubusercontent.com/unibg-seclab/glaciation-gitops-test/main/resources/example_allowed.yaml -n default;
-            kubectl create -f https://raw.githubusercontent.com/unibg-seclab/glaciation-gitops-test/main/resources/example_disallowed_container.yaml -n default && exit 1;
-            kubectl create -f https://raw.githubusercontent.com/unibg-seclab/glaciation-gitops-test/main/resources/example_disallowed_initcontainer.yaml -n default && exit 1;
-            kubectl create -f https://raw.githubusercontent.com/unibg-seclab/glaciation-gitops-test/main/resources/example_disallowed_both.yaml -n default && exit 1;
-
-            # Overwrite last command exit status with success. Indeed, if we
-            # get here the test has succeeded
-            exit 0
-          )
-
-          # Store exit status of the subshell (i.e., state of the test)
-          exit_code=$?
-
-          # Restore cluster in a clean state (these always run even in case of errors above)
-          kubectl delete -f https://raw.githubusercontent.com/unibg-seclab/glaciation-gitops-test/main/resources/example_allowed.yaml -n default;
-          kubectl delete -f https://raw.githubusercontent.com/unibg-seclab/glaciation-gitops-test/main/resources/example_disallowed_container.yaml -n default;
-          kubectl delete -f https://raw.githubusercontent.com/unibg-seclab/glaciation-gitops-test/main/resources/example_disallowed_initcontainer.yaml -n default;
-          kubectl delete -f https://raw.githubusercontent.com/unibg-seclab/glaciation-gitops-test/main/resources/example_disallowed_both.yaml -n default;
-          kubectl delete -f https://raw.githubusercontent.com/unibg-seclab/glaciation-gitops-test/main/resources/constraint.yaml;
-          kubectl delete -f https://raw.githubusercontent.com/unibg-seclab/glaciation-gitops-test/main/resources/template.yaml
-
-          # Return the state of smoke test
-          exit $exit_code
-        image: bitnami/kubectl:1.30
-        name: kubectl
-        resources:
-          limits:
-            cpu: 250m
-            memory: 512Mi
-          requests:
-            cpu: 100m
-            memory: 256Mi
-        securityContext:
-          allowPrivilegeEscalation: false
-          capabilities:
-            drop:
-            - ALL
-          privileged: false
-      restartPolicy: Never
-      securityContext:
-        runAsNonRoot: true
-        seccompProfile:
-          type: RuntimeDefault
-      serviceAccountName: gatekeeper-smoke-test
----
-apiVersion: batch/v1
-kind: Job
-metadata:
-  annotations:
-    argocd.argoproj.io/hook: PostSync
-    argocd.argoproj.io/hook-delete-policy: HookSucceeded
-  name: minio-smoke-tests
-  namespace: minio-tenant
-spec:
-  backoffLimit: 25
-  template:
-    spec:
-      containers:
-      - command:
-        - /bin/sh
-        - -c
-        - |
-          set -e # make sure the job fails if any instruction fails
-
-          source /tmp/config.env;
-          set -x;  # enable printing the command before execution (in the sub-shell)
-          mc alias set minio https://minio.minio-tenant.svc.cluster.local $MINIO_ROOT_USER $MINIO_ROOT_PASSWORD;
-          mc mb -p minio/test-encrypted-bucket;
-          mc encrypt set sse-kms encryption-key minio/test-encrypted-bucket;
-          mc ls minio;
-          echo "This is a line of text" > /tmp/test-object;
-          mc mv /tmp/test-object minio/test-encrypted-bucket;
-          mc ls minio/test-encrypted-bucket;
-          mc cat minio/test-encrypted-bucket/test-object
-        image: quay.io/minio/minio:RELEASE.2024-03-15T01-07-19Z
-        name: minio-client
-        securityContext:
-          allowPrivilegeEscalation: false
-          capabilities:
-            drop:
-            - ALL
-          privileged: false
-          runAsGroup: 1000
-          runAsUser: 1000
-        volumeMounts:
-        - mountPath: /tmp/config.env
-          name: configuration
-          readOnly: true
-          subPath: config.env
-        - mountPath: /etc/ssl/certs/ca.crt
-          name: ca-bundle
-          readOnly: true
-          subPath: ca.crt
-      restartPolicy: Never
-      securityContext:
-        runAsNonRoot: true
-        seccompProfile:
-          type: RuntimeDefault
-      volumes:
-      - configMap:
-          defaultMode: 422
-          name: ca-bundle
-        name: ca-bundle
-      - name: configuration
-        projected:
-          defaultMode: 420
-          sources:
-          - secret:
-              name: glaciation-env-configuration
----
-apiVersion: batch/v1
-kind: Job
-metadata:
-  annotations:
-    argocd.argoproj.io/hook: Sync
-    argocd.argoproj.io/sync-wave: "-20"
-  name: init-vault-cluster
-  namespace: vault
-spec:
-  backoffLimit: 50
-  template:
-    spec:
-      containers:
-      - command:
-        - /bin/sh
-        - -c
-        - |
-          set -e # make sure the job fails if any instruction fails
-
-          function unseal {
-              head -n $THRESHOLD /vault/cluster-keys |
-              while read line; do
-                vault operator unseal \
-                  -address=https://$1.vault-internal:8200 \
-                  $line;
-              done
-          }
-
-          echo '[*] Initialize HA Vault cluster'
-          # Wait for the startup of the Vault pods
-          sleep 30 # it does the job without requiring to create an ad hoc image
-          # TODO: Persist PGP encrypted Vault unseal keys somewhere outside the cluster
-          vault operator init \
-            -address=https://vault-0.vault-internal:8200 \
-            -key-shares=$SHARES \
-            -key-threshold=$THRESHOLD \
-            -format=json > /vault/response.json
-          # Extract unseal keys from the JSON response
-          awk '/"unseal_keys_b64": \[/{flag=1;next}/\]/{flag=0}flag' /vault/response.json | sed -n 's/\s*"\(.*\)".*/\1/p' > /vault/cluster-keys
-          unseal vault-0
-          vault operator raft join \
-            -address=https://vault-1.vault-internal:8200 \
-            -leader-ca-cert="$(cat /vault/userconfig/vault-tls/ca.crt)" \
-            -leader-client-cert="$(cat /vault/userconfig/vault-tls/tls.crt)" \
-            -leader-client-key="$(cat /vault/userconfig/vault-tls/tls.key)" \
-            https://vault-0.vault-internal:8200
-          unseal vault-1
-          vault operator raft join \
-            -address=https://vault-2.vault-internal:8200 \
-            -leader-ca-cert="$(cat /vault/userconfig/vault-tls/ca.crt)" \
-            -leader-client-cert="$(cat /vault/userconfig/vault-tls/tls.crt)" \
-            -leader-client-key="$(cat /vault/userconfig/vault-tls/tls.key)" \
-            https://vault-0.vault-internal:8200
-          unseal vault-2
-          echo -e '\n[*] Setup HA Vault cluster for integration with MinIO'
-          VAULT_ROOT_TOKEN=$(sed -n 's/\s*"root_token": "\(.*\)".*/\1/p' /vault/response.json)
-          vault login \
-            -address=https://vault-0.vault-internal:8200 \
-            $VAULT_ROOT_TOKEN
-          vault secrets enable \
-            -address=https://vault-0.vault-internal:8200 \
-            -version=2 \
-            kv
-          vault policy write \
-            -address=https://vault-0.vault-internal:8200 \
-            kes-policy /minio/kes/kes-policy.hcl
-          vault auth enable \
-            -address=https://vault-0.vault-internal:8200 \
-            kubernetes
-          vault write \
-            -address=https://vault-0.vault-internal:8200 \
-            auth/kubernetes/config \
-            token_reviewer_jwt="$(cat /minio/kes/service-account/token)" \
-            kubernetes_host="https://kubernetes.default.svc.cluster.local" \
-            kubernetes_ca_cert="$(cat /minio/kes/service-account/ca.crt)" \
-            issuer="https://kubernetes.default.svc.cluster.local"
-          vault write \
-            -address=https://vault-0.vault-internal:8200 \
-            auth/kubernetes/role/minio-kes \
-            bound_service_account_names=minio-kes \
-            bound_service_account_namespaces=minio-tenant \
-            policies=kes-policy \
-            ttl=1h
-        env:
-        - name: SHARES
-          value: "5"
-        - name: THRESHOLD
-          value: "3"
-        image: hashicorp/vault:1.16.1
-        name: vault
-        securityContext:
-          allowPrivilegeEscalation: false
-          capabilities:
-            drop:
-            - ALL
-          privileged: false
-          runAsGroup: 1000
-          runAsUser: 100
-        volumeMounts:
-        - mountPath: /etc/ssl/certs/ca.crt
-          name: ca-bundle
-          readOnly: true
-          subPath: ca.crt
-        - mountPath: /vault/userconfig/vault-tls
-          name: userconfig-vault-tls
-          readOnly: true
-        - mountPath: /minio/kes/service-account
-          name: minio-kes-service-account-token
-          readOnly: true
-        - mountPath: /minio/kes/kes-policy.hcl
-          name: kes-policy
-          readOnly: true
-          subPath: kes-policy.hcl
-      restartPolicy: Never
-      securityContext:
-        runAsGroup: 1000
-        runAsNonRoot: true
-        runAsUser: 100
-        seccompProfile:
-          type: RuntimeDefault
-      volumes:
-      - configMap:
-          defaultMode: 422
-          name: ca-bundle
-        name: ca-bundle
-      - name: userconfig-vault-tls
-        secret:
-          defaultMode: 420
-          secretName: vault-tls
-      - name: minio-kes-service-account-token
-        secret:
-          defaultMode: 420
-          secretName: minio-kes-secret
-      - configMap:
-          defaultMode: 420
-          name: kes-policy
-        name: kes-policy
----
-apiVersion: cert-manager.io/v1
-kind: Certificate
-metadata:
-  annotations:
-    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
-    argocd.argoproj.io/sync-wave: "-25"
-  name: my-selfsigned-ca
-  namespace: cert-manager
-spec:
-  commonName: my-selfsigned-ca
-  isCA: true
-  issuerRef:
-    group: cert-manager.io
-    kind: ClusterIssuer
-    name: selfsigned-issuer
-  privateKey:
-    algorithm: ECDSA
-    size: 256
-  secretName: root-secret
----
-apiVersion: cert-manager.io/v1
-kind: Certificate
-metadata:
-  annotations:
-    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
-    argocd.argoproj.io/sync-wave: "-25"
-  name: vault-certificate
-  namespace: vault
-spec:
-  commonName: system:node:*.vault.svc.cluster.local
-  dnsNames:
-  - '*.vault-internal'
-  - '*.vault-internal.vault.svc.cluster.local'
-  - '*.vault'
-  - vault-internal.vault.svc.cluster.local
-  duration: 2160h
-  ipAddresses:
-  - 127.0.0.1
-  - 192.168.49.2
-  isCA: false
-  issuerRef:
-    group: cert-manager.io
-    kind: ClusterIssuer
-    name: private-ca-issuer
-  privateKey:
-    algorithm: RSA
-    size: 2048
-  renewBefore: 360h
-  secretName: vault-tls
-  subject:
-    organizations:
-    - system:nodes
-  usages:
-  - digital signature
-  - key encipherment
-  - data encipherment
-  - server auth
-  - client auth
----
-apiVersion: cert-manager.io/v1
-kind: ClusterIssuer
-metadata:
-  annotations:
-    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
-    argocd.argoproj.io/sync-wave: "-25"
-  name: private-ca-issuer
-spec:
-  ca:
-    secretName: root-secret
----
-apiVersion: cert-manager.io/v1
-kind: ClusterIssuer
-metadata:
-  annotations:
-    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
-    argocd.argoproj.io/sync-wave: "-25"
-  name: selfsigned-issuer
-spec:
-  selfSigned: {}
----
-apiVersion: trust.cert-manager.io/v1alpha1
-kind: Bundle
-metadata:
-  annotations:
-    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
-    argocd.argoproj.io/sync-wave: "-25"
-  name: ca-bundle
-spec:
-  sources:
-  - useDefaultCAs: true
-  - configMap:
-      key: ca.crt
-      name: kube-root-ca.crt
-  - secret:
-      key: ca.crt
-      name: root-secret
-  target:
-    additionalFormats:
-      jks:
-        key: ca.jks
-    configMap:
-      key: ca.crt
-    namespaceSelector:
-      matchLabels:
-        create-ca-bundle: "true"
-    secret:
-      key: ca.crt

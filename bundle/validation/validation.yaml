@@ -228,6 +228,51 @@ subjects:
 ---
 apiVersion: v1
 data:
+  resource.customizations: |-
+    argoproj.io/Application:
+      health.lua: |
+        hs = {}
+        hs.status = "Progressing"
+        hs.message = ""
+        if obj.status ~= nil then
+          if obj.status.health ~= nil then
+            hs.status = obj.status.health.status
+            if obj.status.health.message ~= nil then
+              hs.message = obj.status.health.message
+            end
+          end
+        end
+        return hs
+  users.anonymous.enabled: "true"
+kind: ConfigMap
+metadata:
+  labels:
+    app.kubernetes.io/name: argocd-cm
+    app.kubernetes.io/part-of: argocd
+  name: argocd-cm
+  namespace: argocd
+---
+apiVersion: v1
+data:
+  server.insecure: "true"
+kind: ConfigMap
+metadata:
+  labels:
+    app.kubernetes.io/name: argocd-cmd-params-cm
+    app.kubernetes.io/part-of: argocd
+  name: argocd-cmd-params-cm
+  namespace: argocd
+---
+apiVersion: v1
+data:
+  policy.default: role:readonly
+kind: ConfigMap
+metadata:
+  name: argocd-rbac-cm
+  namespace: argocd
+---
+apiVersion: v1
+data:
   config.json: |-
     {
             "nodePathMap":[
@@ -1062,7 +1107,7 @@ kind: Application
 metadata:
   annotations:
     argocd.argoproj.io/compare-options: ServerSideDiff=true
-    argocd.argoproj.io/sync-wave: "-30"
+    argocd.argoproj.io/sync-wave: "-10"
   finalizers:
   - resources-finalizer.argocd.argoproj.io
   name: minio

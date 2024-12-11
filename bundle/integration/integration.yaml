@@ -1994,7 +1994,7 @@ spec:
           timeoutSeconds: 5
         settings:
           builder:
-            builder_tick_seconds: 600
+            builder_tick_seconds: 60
             is_single_slice: true
             node_port: 80
             queries:
@@ -2003,7 +2003,7 @@ spec:
                 property: Energy.Usage
                 query: |
                   label_replace(
-                    irate(kepler_node_platform_joules_total[10m] @{{now}}),
+                    irate(kepler_node_platform_joules_total[1m] @{{now}}),
                     "resource",
                     "$1",
                     "exported_instance",
@@ -2014,14 +2014,14 @@ spec:
                 unit: milliwatts
               - aggregation:
                   function: average
-                  period_seconds: 600
+                  period_seconds: 60
                 measurement_id: Available
                 property: CPU.Available
                 query: |
                   label_replace(
                     sum(
                       rate(
-                        node_cpu_seconds_total{mode="idle", service="monitoring-stack-prometheus-node-exporter"}[10m] @{{now}}
+                        node_cpu_seconds_total{mode="idle", service="monitoring-stack-prometheus-node-exporter"}[1m] @{{now}}
                       )
                     ) by (node),
                     "resource",

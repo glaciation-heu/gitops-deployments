@@ -2274,7 +2274,8 @@ spec:
               \     target_label: __param_target\n    - source_labels: [__param_target]\n
               \     target_label: instance\n    - target_label: __address__\n      replacement:
               monitoring-stack-prometheus-snmp-exporter.monitoring.svc.cluster.local:9116
-              \ # The SNMP exporter's real hostname:port.      \n"
+              \ # The SNMP exporter's real hostname:port.      \n- job_name: 'jena-fuseki-exporter'\n
+              \ scrape_interval: 10m\n  static_configs:\n  - targets:\n    - 'jena-fuseki-exporter.dkg-engine.svc.cluster.local'"
         influxdb:
           enabled: false
         kepler:
@@ -2322,7 +2323,8 @@ spec:
             \   action: keep\n    regex: 'ray-cluster-kuberay-head'\n- job_name: 'ray-worker'\n
             \ kubernetes_sd_configs:\n    - role: pod\n  relabel_configs:\n  - source_labels:
             [__meta_kubernetes_pod_label_app_kubernetes_io_name]\n    action: keep\n
-            \   regex: 'ray-cluster-kuberay-workergroup-worker'\n"
+            \   regex: 'ray-cluster-kuberay-workergroup-worker'\n- job_name: 'jena-fuseki-exporter'\n
+            \ scrape_interval: 10m\n  static_configs:\n  - targets:\n    - 'jena-fuseki-exporter.dkg-engine.svc.cluster.local'\n"
           server:
             ingress:
               enabled: true

@@ -4,6 +4,6 @@ resources:
   - local-path-storage.yaml
   - nginx-ingress.yaml
   - jena-fuseki.yaml
-  - jena-fuseki-explorer.yaml
+  - jena-fuseki-exporter.yaml
   - longhorn.yaml
   - jenkins.yaml

@@ -39,7 +39,7 @@ spec:
 
         settings:
           builder:
-            builder_tick_seconds: 600
+            builder_tick_seconds: 60
             node_port: 80
             single_slice_url: http://metadata-service:80
             is_single_slice: True
@@ -51,7 +51,7 @@ spec:
                   property: Energy.Usage
                   query: |
                     label_replace(
-                      irate(kepler_node_platform_joules_total[10m] @{{now}}),
+                      irate(kepler_node_platform_joules_total[1m] @{{now}}),
                       "resource",
                       "$1",
                       "exported_instance",
@@ -65,13 +65,13 @@ spec:
                   unit: Core
                   property: CPU.Available
                   aggregation:
-                    period_seconds: 600
+                    period_seconds: 60
                     function: average
                   query: |
                     label_replace(
                       sum(
                         rate(
-                          node_cpu_seconds_total{mode="idle", service="monitoring-stack-prometheus-node-exporter"}[10m] @{{now}}
+                          node_cpu_seconds_total{mode="idle", service="monitoring-stack-prometheus-node-exporter"}[1m] @{{now}}
                         )
                       ) by (node),
                       "resource",

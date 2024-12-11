@@ -104,7 +104,11 @@ spec:
               - source_labels: [__meta_kubernetes_pod_label_app_kubernetes_io_name]
                 action: keep
                 regex: 'ray-cluster-kuberay-workergroup-worker'
-
+            - job_name: 'jena-fuseki-exporter'
+              scrape_interval: 10m
+              static_configs:
+              - targets:
+                - 'jena-fuseki-exporter.dkg-engine.svc.cluster.local'
         telegraf:
           enabled: false
           resources:

@@ -4,9 +4,8 @@ metadata:
   name: minio-tenant
   namespace: argocd
   annotations:
-    # argocd.argoproj.io/hook: Sync
     argocd.argoproj.io/compare-options: ServerSideDiff=true
-    argocd.argoproj.io/sync-wave: "-4"
+    argocd.argoproj.io/sync-wave: "-8"
   finalizers:
   - resources-finalizer.argocd.argoproj.io
 spec:
@@ -73,7 +72,7 @@ spec:
             - name: uc1
             - name: uc2
             - name: uc3
-            - name: sanitization
+            - name: uc4
           # Define configuration for KES (stateless and distributed key-management
           # system)
           kes:

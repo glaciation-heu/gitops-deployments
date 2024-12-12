@@ -4,8 +4,7 @@ metadata:
   name: spark-history-server
   namespace: argocd
   annotations:
-    argocd.argoproj.io/hook: Sync
-    argocd.argoproj.io/sync-wave: "-3"
+    argocd.argoproj.io/sync-wave: "-7"
   finalizers:
   - resources-finalizer.argocd.argoproj.io
 spec:
@@ -13,7 +12,7 @@ spec:
   sources:
   - repoURL: https://glaciation-heu.github.io/spark-history-server
     chart: spark-history-server
-    targetRevision: 1.0.3
+    targetRevision: 1.0.4
     helm:
       valuesObject:
         secret:

@@ -2,11 +2,28 @@ apiVersion: v1
 kind: Namespace
 metadata:
   annotations:
-    argocd.argoproj.io/hook: PreSync
-    argocd.argoproj.io/sync-wave: "-3"
+    argocd.argoproj.io/sync-wave: "-8"
+  labels:
+    create-ca-bundle: "true"
+  name: minio-tenant
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "-8"
   labels:
     create-ca-bundle: "true"
   name: spark-app
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "-9"
+  labels:
+    create-ca-bundle: "true"
+  name: vault
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -16,6 +33,14 @@ metadata:
     argocd.argoproj.io/hook-delete-policy: HookSucceeded
   name: gatekeeper-smoke-test
   namespace: gatekeeper-system
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "-8"
+  name: minio-kes
+  namespace: minio-tenant
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -51,6 +76,22 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   annotations:
+    argocd.argoproj.io/sync-wave: "-8"
+  name: role-tokenreview-binding
+  namespace: minio-tenant
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:auth-delegator
+subjects:
+- kind: ServiceAccount
+  name: minio-kes
+  namespace: minio-tenant
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  annotations:
     argocd.argoproj.io/hook: PostSync
     argocd.argoproj.io/hook-delete-policy: HookSucceeded
   name: gatekeeper-smoke-test
@@ -63,11 +104,231 @@ subjects:
   name: gatekeeper-smoke-test
   namespace: gatekeeper-system
 ---
+apiVersion: v1
+data:
+  adults.json: "{\n    \"columnScoringFunction\": \"entropy\",\n    \"driver\": {\n
+    \       \"memory\": \"1g\"\n    },\n    \"executor\": {\n        \"instances\":
+    4,\n        \"memory\": \"1g\"\n    },\n    \"idAttributes\": [\n        \"capital-loss\",\n
+    \       \"capital-gain\"\n    ],\n    \"informationLossMeasures\": [\n        \"discernabilityPenalty\",\n
+    \       \"globalCertaintyPenalty\"\n    ],\n    \"input\": \"s3a://sanitization/dataset/adults.csv\",\n
+    \   \"isFullyDistributed\": false,\n    \"k\": 3,\n    \"l\": 2,\n    \"output\":
+    \"s3a://sanitization/anonymized/adults.csv\",\n    \"partitionFunction\": \"quantile\",\n
+    \   \"quasiIdAttributes\": [\n        \"age\",\n        \"education-num\",\n        \"race\",\n
+    \       \"native-country\"\n    ],\n    \"redact\": true,\n    \"sensitiveAttributes\":
+    [\n        \"income\" \n    ]\n}"
+kind: ConfigMap
+metadata:
+  annotations:
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: HookSucceeded
+  name: data-sanitization-config
+  namespace: spark-app
+---
+apiVersion: v1
+data:
+  kes-policy.hcl: |
+    path "kv/data/minio-tenant/*" {
+      capabilities = [ "create", "read" ]
+    }
+    path "kv/metadata/minio-tenant/*" {
+      capabilities = [ "list", "delete" ]
+    }
+kind: ConfigMap
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "-9"
+  name: kes-policy
+  namespace: vault
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "-8"
+    kubernetes.io/service-account.name: minio-kes
+    replicator.v1.mittwald.de/replication-allowed: "true"
+    replicator.v1.mittwald.de/replication-allowed-namespaces: vault
+  name: minio-kes-secret
+  namespace: minio-tenant
+type: kubernetes.io/service-account-token
+---
+apiVersion: v1
+data: {}
+kind: Secret
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "-9"
+    replicator.v1.mittwald.de/replicate-from: minio-tenant/minio-kes-secret
+  name: minio-kes-secret
+  namespace: vault
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "-9"
+  name: auto-unseal-vault-cluster
+  namespace: vault
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: auto-unseal-vault-cluster
+  template:
+    metadata:
+      labels:
+        app: auto-unseal-vault-cluster
+    spec:
+      containers:
+      - command:
+        - /bin/sh
+        - -c
+        - |
+          function unseal {
+              head -n $THRESHOLD /vault/cluster-keys |
+              while read line; do
+                vault operator unseal \
+                  -address=https://$1.vault-internal:8200 \
+                  $line;
+              done
+          }
+
+          echo '[*] Initialize HA Vault cluster'
+
+          # Loop infinitely
+          while :
+          do
+              # Wait for the startup of the Vault pods / delay before next
+              # status check
+              sleep 30 # it does the job without requiring to create an ad hoc image
+
+              vault operator init -address=https://vault-0.vault-internal:8200 -status
+              STATUS=$?
+
+              if [ "$STATUS" -gt 0 ]; then
+                  # Setup HA Vault cluster leader
+                  # TODO: Persist PGP encrypted Vault unseal keys somewhere outside the cluster
+                  vault operator init \
+                    -address=https://vault-0.vault-internal:8200 \
+                    -key-shares=$SHARES \
+                    -key-threshold=$THRESHOLD \
+                    -format=json > /vault/response.json
+
+                  # Extract unseal keys from the JSON response
+                  awk '/"unseal_keys_b64": \[/{flag=1;next}/\]/{flag=0}flag' /vault/response.json | sed -n 's/\s*"\(.*\)".*/\1/p' > /vault/cluster-keys
+              fi
+
+              unseal vault-0
+
+              # Setup HA Vault cluster follower (vault-1)
+              vault operator raft join \
+                -address=https://vault-1.vault-internal:8200 \
+                -leader-ca-cert="$(cat /vault/userconfig/vault-tls/ca.crt)" \
+                -leader-client-cert="$(cat /vault/userconfig/vault-tls/tls.crt)" \
+                -leader-client-key="$(cat /vault/userconfig/vault-tls/tls.key)" \
+                https://vault-0.vault-internal:8200
+              unseal vault-1
+
+              # Setup HA Vault cluster follower (vault-2)
+              vault operator raft join \
+                -address=https://vault-2.vault-internal:8200 \
+                -leader-ca-cert="$(cat /vault/userconfig/vault-tls/ca.crt)" \
+                -leader-client-cert="$(cat /vault/userconfig/vault-tls/tls.crt)" \
+                -leader-client-key="$(cat /vault/userconfig/vault-tls/tls.key)" \
+                https://vault-0.vault-internal:8200
+              unseal vault-2
+
+              if [ "$STATUS" -gt 0 ]; then
+                  echo -e '\n[*] Setup HA Vault cluster for integration with MinIO'
+                  VAULT_ROOT_TOKEN=$(sed -n 's/\s*"root_token": "\(.*\)".*/\1/p' /vault/response.json)
+                  vault login \
+                    -address=https://vault-0.vault-internal:8200 \
+                    $VAULT_ROOT_TOKEN
+                  vault secrets enable \
+                    -address=https://vault-0.vault-internal:8200 \
+                    -version=2 \
+                    kv
+                  vault policy write \
+                    -address=https://vault-0.vault-internal:8200 \
+                    kes-policy /minio/kes/kes-policy.hcl
+                  vault auth enable \
+                    -address=https://vault-0.vault-internal:8200 \
+                    kubernetes
+                  vault write \
+                    -address=https://vault-0.vault-internal:8200 \
+                    auth/kubernetes/config \
+                    token_reviewer_jwt="$(cat /minio/kes/service-account/token)" \
+                    kubernetes_host="https://kubernetes.default.svc.cluster.local" \
+                    kubernetes_ca_cert="$(cat /minio/kes/service-account/ca.crt)" \
+                    issuer="https://kubernetes.default.svc.cluster.local"
+                  vault write \
+                    -address=https://vault-0.vault-internal:8200 \
+                    auth/kubernetes/role/minio-kes \
+                    bound_service_account_names=minio-kes \
+                    bound_service_account_namespaces=minio-tenant \
+                    policies=kes-policy \
+                    ttl=1h
+              fi
+          done
+        env:
+        - name: SHARES
+          value: "5"
+        - name: THRESHOLD
+          value: "3"
+        image: hashicorp/vault:1.16.1
+        name: vault
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          privileged: false
+          runAsGroup: 1000
+          runAsUser: 100
+        volumeMounts:
+        - mountPath: /etc/ssl/certs/ca.crt
+          name: ca-bundle
+          readOnly: true
+          subPath: ca.crt
+        - mountPath: /vault/userconfig/vault-tls
+          name: userconfig-vault-tls
+          readOnly: true
+        - mountPath: /minio/kes/service-account
+          name: minio-kes-service-account-token
+          readOnly: true
+        - mountPath: /minio/kes/kes-policy.hcl
+          name: kes-policy
+          readOnly: true
+          subPath: kes-policy.hcl
+      securityContext:
+        runAsGroup: 1000
+        runAsNonRoot: true
+        runAsUser: 100
+        seccompProfile:
+          type: RuntimeDefault
+      volumes:
+      - configMap:
+          defaultMode: 422
+          name: ca-bundle
+        name: ca-bundle
+      - name: userconfig-vault-tls
+        secret:
+          defaultMode: 420
+          secretName: vault-tls
+      - name: minio-kes-service-account-token
+        secret:
+          defaultMode: 420
+          secretName: minio-kes-secret
+      - configMap:
+          defaultMode: 420
+          name: kes-policy
+        name: kes-policy
+---
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   annotations:
-    argocd.argoproj.io/sync-wave: "-30"
+    argocd.argoproj.io/sync-wave: "-25"
   finalizers:
   - resources-finalizer.argocd.argoproj.io
   name: cert-manager
@@ -101,8 +362,7 @@ apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   annotations:
-    argocd.argoproj.io/hook: Sync
-    argocd.argoproj.io/sync-wave: "-2"
+    argocd.argoproj.io/sync-wave: "-7"
   finalizers:
   - resources-finalizer.argocd.argoproj.io
   name: data-sanitization
@@ -150,7 +410,7 @@ spec:
             name: ca-bundle
           name: ca-bundle
     repoURL: https://glaciation-heu.github.io/data-sanitization-service
-    targetRevision: 0.2.2
+    targetRevision: 0.2.4
   syncPolicy:
     automated:
       prune: true
@@ -247,7 +507,7 @@ kind: Application
 metadata:
   annotations:
     argocd.argoproj.io/compare-options: ServerSideDiff=true
-    argocd.argoproj.io/sync-wave: "-4"
+    argocd.argoproj.io/sync-wave: "-8"
   finalizers:
   - resources-finalizer.argocd.argoproj.io
   name: minio-tenant
@@ -287,7 +547,7 @@ spec:
           - name: uc1
           - name: uc2
           - name: uc3
-          - name: sanitization
+          - name: uc4
           certificate:
             requestAutoCert: true
           configuration:
@@ -382,7 +642,7 @@ apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   annotations:
-    argocd.argoproj.io/sync-wave: "-22"
+    argocd.argoproj.io/sync-wave: "-25"
   finalizers:
   - resources-finalizer.argocd.argoproj.io
   name: replicator
@@ -408,8 +668,7 @@ apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   annotations:
-    argocd.argoproj.io/hook: Sync
-    argocd.argoproj.io/sync-wave: "-3"
+    argocd.argoproj.io/sync-wave: "-7"
   finalizers:
   - resources-finalizer.argocd.argoproj.io
   name: spark-history-server
@@ -459,7 +718,7 @@ spec:
             name: ca-bundle
           name: ca
     repoURL: https://glaciation-heu.github.io/spark-history-server
-    targetRevision: 1.0.3
+    targetRevision: 1.0.4
   syncPolicy:
     automated:
       prune: true
@@ -471,8 +730,7 @@ apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   annotations:
-    argocd.argoproj.io/hook: Sync
-    argocd.argoproj.io/sync-wave: "-3"
+    argocd.argoproj.io/sync-wave: "-8"
   finalizers:
   - resources-finalizer.argocd.argoproj.io
   name: spark-operator
@@ -504,7 +762,7 @@ apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   annotations:
-    argocd.argoproj.io/sync-wave: "-30"
+    argocd.argoproj.io/sync-wave: "-25"
   finalizers:
   - resources-finalizer.argocd.argoproj.io
   name: trust-manager
@@ -539,7 +797,7 @@ kind: Application
 metadata:
   annotations:
     argocd.argoproj.io/compare-options: ServerSideDiff=true
-    argocd.argoproj.io/sync-wave: "-20"
+    argocd.argoproj.io/sync-wave: "-9"
   finalizers:
   - resources-finalizer.argocd.argoproj.io
   name: vault
@@ -782,12 +1040,12 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   annotations:
-    argocd.argoproj.io/hook: Sync
-    argocd.argoproj.io/sync-wave: "-20"
-  name: init-vault-cluster
-  namespace: vault
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: HookSucceeded
+  name: data-sanitization-smoke-test
+  namespace: spark-app
 spec:
-  backoffLimit: 50
+  backoffLimit: 5
   template:
     spec:
       containers:
@@ -797,105 +1055,92 @@ spec:
         - |
           set -e # make sure the job fails if any instruction fails
 
-          function unseal {
-              head -n $THRESHOLD /vault/cluster-keys |
-              while read line; do
-                vault operator unseal \
-                  -address=https://$1.vault-internal:8200 \
-                  $line;
-              done
+          function cleanup {
+              echo -e '\n[*] Delete sanitization job';
+              curl \
+                --silent \
+                --request DELETE \
+                --header 'Content-Type: application/json' \
+                --output /dev/null \
+                http://data-sanitization.spark-app.svc.cluster.local/api/v1alpha1/job/$1
           }
 
-          echo '[*] Initialize HA Vault cluster'
-          # Wait for the startup of the Vault pods
-          sleep 30 # it does the job without requiring to create an ad hoc image
-          # TODO: Persist PGP encrypted Vault unseal keys somewhere outside the cluster
-          vault operator init \
-            -address=https://vault-0.vault-internal:8200 \
-            -key-shares=$SHARES \
-            -key-threshold=$THRESHOLD \
-            -format=json > /vault/response.json
-          # Extract unseal keys from the JSON response
-          awk '/"unseal_keys_b64": \[/{flag=1;next}/\]/{flag=0}flag' /vault/response.json | sed -n 's/\s*"\(.*\)".*/\1/p' > /vault/cluster-keys
-          unseal vault-0
-          vault operator raft join \
-            -address=https://vault-1.vault-internal:8200 \
-            -leader-ca-cert="$(cat /vault/userconfig/vault-tls/ca.crt)" \
-            -leader-client-cert="$(cat /vault/userconfig/vault-tls/tls.crt)" \
-            -leader-client-key="$(cat /vault/userconfig/vault-tls/tls.key)" \
-            https://vault-0.vault-internal:8200
-          unseal vault-1
-          vault operator raft join \
-            -address=https://vault-2.vault-internal:8200 \
-            -leader-ca-cert="$(cat /vault/userconfig/vault-tls/ca.crt)" \
-            -leader-client-cert="$(cat /vault/userconfig/vault-tls/tls.crt)" \
-            -leader-client-key="$(cat /vault/userconfig/vault-tls/tls.key)" \
-            https://vault-0.vault-internal:8200
-          unseal vault-2
-          echo -e '\n[*] Setup HA Vault cluster for integration with MinIO'
-          VAULT_ROOT_TOKEN=$(sed -n 's/\s*"root_token": "\(.*\)".*/\1/p' /vault/response.json)
-          vault login \
-            -address=https://vault-0.vault-internal:8200 \
-            $VAULT_ROOT_TOKEN
-          vault secrets enable \
-            -address=https://vault-0.vault-internal:8200 \
-            -version=2 \
-            kv
-          vault policy write \
-            -address=https://vault-0.vault-internal:8200 \
-            kes-policy /minio/kes/kes-policy.hcl
-          vault auth enable \
-            -address=https://vault-0.vault-internal:8200 \
-            kubernetes
-          vault write \
-            -address=https://vault-0.vault-internal:8200 \
-            auth/kubernetes/config \
-            token_reviewer_jwt="$(cat /minio/kes/service-account/token)" \
-            kubernetes_host="https://kubernetes.default.svc.cluster.local" \
-            kubernetes_ca_cert="$(cat /minio/kes/service-account/ca.crt)" \
-            issuer="https://kubernetes.default.svc.cluster.local"
-          vault write \
-            -address=https://vault-0.vault-internal:8200 \
-            auth/kubernetes/role/minio-kes \
-            bound_service_account_names=minio-kes \
-            bound_service_account_namespaces=minio-tenant \
-            policies=kes-policy \
-            ttl=1h
-        env:
-        - name: SHARES
-          value: "5"
-        - name: THRESHOLD
-          value: "3"
-        image: hashicorp/vault:1.16.1
-        name: vault
+          echo -e '[*] Install MinIO client and jq';
+          curl https://dl.min.io/client/mc/release/linux-amd64/mc \
+            --create-dirs \
+            --output /tmp/bin/mc;
+          curl https://github.com/jqlang/jq/releases/download/jq-1.7/jq-linux-amd64 \
+            --create-dirs \
+            --location \
+            --output /tmp/bin/jq;
+          chmod +x /tmp/bin/mc /tmp/bin/jq;
+          export PATH=$PATH:/tmp/bin/;
+          echo -e '\n[*] Setup object store for the sanitization process';
+          mc alias set minio https://minio.minio-tenant.svc.cluster.local $AWS_ACCESS_KEY_ID $AWS_SECRET_ACCESS_KEY;
+          mc mb -p minio/sanitization/dataset;
+          mc mb -p minio/sanitization/anonymized;
+          curl --output /tmp/adults.csv https://raw.githubusercontent.com/mosaicrown/mondrian/k8s/distributed/dataset/adults.csv
+          mc cp /tmp/adults.csv minio/sanitization/dataset/;
+          echo -e '\n\n[*] Peak into the contents of the dataset'
+          mc head minio/sanitization/dataset/adults.csv;
+          echo -e '\n[*] Run sanitization job'
+          REQ_ID=$(
+              curl \
+                  --silent \
+                  --request POST \
+                  --header 'Content-Type: application/json' \
+                  --data @/tmp/adults.json \
+                  http://data-sanitization.spark-app.svc.cluster.local/api/v1alpha1/job | jq -r .id
+          );
+          echo -e '\nWaiting for the completion of the sanitization job...';
+          STATUS="UNKNOWN";
+          while [ "$STATUS" != "COMPLETED" ]; do
+              if [ "$STATUS" == "FAILED" ] || [ "$STATUS" == "SUBMISSION_FAILED" ]; then
+                  cleanup $REQ_ID
+                  exit 1 # exit with an error code if the sanitization job fails
+              fi
+
+              sleep 5;
+              STATUS=$(
+                  curl \
+                      --silent \
+                      --request GET \
+                      --header 'Content-Type: application/json' \
+                      http://data-sanitization.spark-app.svc.cluster.local/api/v1alpha1/job/$REQ_ID/status | jq -r .state
+              );
+              echo "Data sanitization job with id=$REQ_ID has status=$STATUS";
+          done;
+          echo -e '\n[*] Showcase a sample of the output';
+          mc ls minio/sanitization/anonymized;
+          mc ls minio/sanitization/anonymized/adults.csv;
+          PART=$(mc ls --json minio/sanitization/anonymized/adults.csv | jq -r '.key | select(startswith("part-00000-")) | select(endswith(".csv"))');
+          mc head minio/sanitization/anonymized/adults.csv/$PART;
+          cleanup $REQ_ID
+        envFrom:
+        - secretRef:
+            name: minio-credentials
+        image: curlimages/curl:8.7.1
+        name: curl
         securityContext:
           allowPrivilegeEscalation: false
           capabilities:
             drop:
             - ALL
           privileged: false
-          runAsGroup: 1000
+          runAsGroup: 101
           runAsUser: 100
         volumeMounts:
         - mountPath: /etc/ssl/certs/ca.crt
           name: ca-bundle
           readOnly: true
           subPath: ca.crt
-        - mountPath: /vault/userconfig/vault-tls
-          name: userconfig-vault-tls
+        - mountPath: /tmp/adults.json
+          name: data-sanitization-config
           readOnly: true
-        - mountPath: /minio/kes/service-account
-          name: minio-kes-service-account-token
-          readOnly: true
-        - mountPath: /minio/kes/kes-policy.hcl
-          name: kes-policy
-          readOnly: true
-          subPath: kes-policy.hcl
+          subPath: adults.json
       restartPolicy: Never
       securityContext:
-        runAsGroup: 1000
         runAsNonRoot: true
-        runAsUser: 100
         seccompProfile:
           type: RuntimeDefault
       volumes:
@@ -903,18 +1148,10 @@ spec:
           defaultMode: 422
           name: ca-bundle
         name: ca-bundle
-      - name: userconfig-vault-tls
-        secret:
-          defaultMode: 420
-          secretName: vault-tls
-      - name: minio-kes-service-account-token
-        secret:
-          defaultMode: 420
-          secretName: minio-kes-secret
       - configMap:
-          defaultMode: 420
-          name: kes-policy
-        name: kes-policy
+          defaultMode: 422
+          name: data-sanitization-config
+        name: data-sanitization-config
 ---
 apiVersion: cert-manager.io/v1
 kind: Certificate
@@ -941,7 +1178,7 @@ kind: Certificate
 metadata:
   annotations:
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
-    argocd.argoproj.io/sync-wave: "-25"
+    argocd.argoproj.io/sync-wave: "-24"
   name: vault-certificate
   namespace: vault
 spec:
@@ -995,6 +1232,846 @@ metadata:
   name: selfsigned-issuer
 spec:
   selfSigned: {}
+---
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: K8sContainerLimits
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+    argocd.argoproj.io/sync-wave: "-30"
+  name: container-must-have-limits
+spec:
+  match:
+    kinds:
+    - apiGroups:
+      - ""
+      kinds:
+      - Pod
+    namespaces:
+    - cert-manager
+    - gatekeeper-system
+    - minio-operator
+    - minio-tenant
+    - replicator
+    - spark-app
+    - spark-operator
+    - vault
+  parameters:
+    cpu: "2"
+    memory: 8Gi
+---
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: K8sContainerRequests
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+    argocd.argoproj.io/sync-wave: "-30"
+  name: container-must-have-requests
+spec:
+  match:
+    kinds:
+    - apiGroups:
+      - ""
+      kinds:
+      - Pod
+    namespaces:
+    - cert-manager
+    - gatekeeper-system
+    - minio-operator
+    - minio-tenant
+    - replicator
+    - spark-app
+    - spark-operator
+    - vault
+  parameters:
+    cpu: "1"
+    memory: 4Gi
+---
+apiVersion: mutations.gatekeeper.sh/v1
+kind: Assign
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+    argocd.argoproj.io/sync-wave: "-30"
+  name: add-container-resource-cpu-limits
+spec:
+  applyTo:
+  - groups:
+    - ""
+    kinds:
+    - Pod
+    versions:
+    - v1
+  location: spec.containers[name:*].resources.limits.cpu
+  match:
+    namespaces:
+    - cert-manager
+    - gatekeeper-system
+    - minio-operator
+    - minio-tenant
+    - replicator
+    - spark-app
+    - spark-operator
+    - vault
+  parameters:
+    assign:
+      value: "1"
+    pathTests:
+    - condition: MustNotExist
+      subPath: spec.containers[name:*].resources.limits.cpu
+---
+apiVersion: mutations.gatekeeper.sh/v1
+kind: Assign
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+    argocd.argoproj.io/sync-wave: "-30"
+  name: add-container-resource-cpu-requests
+spec:
+  applyTo:
+  - groups:
+    - ""
+    kinds:
+    - Pod
+    versions:
+    - v1
+  location: spec.containers[name:*].resources.requests.cpu
+  match:
+    namespaces:
+    - cert-manager
+    - gatekeeper-system
+    - minio-operator
+    - minio-tenant
+    - replicator
+    - spark-app
+    - spark-operator
+    - vault
+  parameters:
+    assign:
+      value: 100m
+    pathTests:
+    - condition: MustNotExist
+      subPath: spec.containers[name:*].resources.requests.cpu
+---
+apiVersion: mutations.gatekeeper.sh/v1
+kind: Assign
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+    argocd.argoproj.io/sync-wave: "-30"
+  name: add-container-resource-memory-limits
+spec:
+  applyTo:
+  - groups:
+    - ""
+    kinds:
+    - Pod
+    versions:
+    - v1
+  location: spec.containers[name:*].resources.limits.memory
+  match:
+    namespaces:
+    - cert-manager
+    - gatekeeper-system
+    - minio-operator
+    - minio-tenant
+    - replicator
+    - spark-app
+    - spark-operator
+    - vault
+  parameters:
+    assign:
+      value: 4Gi
+    pathTests:
+    - condition: MustNotExist
+      subPath: spec.containers[name:*].resources.limits.memory
+---
+apiVersion: mutations.gatekeeper.sh/v1
+kind: Assign
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+    argocd.argoproj.io/sync-wave: "-30"
+  name: add-container-resource-memory-requests
+spec:
+  applyTo:
+  - groups:
+    - ""
+    kinds:
+    - Pod
+    versions:
+    - v1
+  location: spec.containers[name:*].resources.requests.memory
+  match:
+    namespaces:
+    - cert-manager
+    - gatekeeper-system
+    - minio-operator
+    - minio-tenant
+    - replicator
+    - spark-app
+    - spark-operator
+    - vault
+  parameters:
+    assign:
+      value: 256Mi
+    pathTests:
+    - condition: MustNotExist
+      subPath: spec.containers[name:*].resources.requests.memory
+---
+apiVersion: mutations.gatekeeper.sh/v1
+kind: Assign
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+    argocd.argoproj.io/sync-wave: "-30"
+  name: add-initcontainer-resource-cpu-limits
+spec:
+  applyTo:
+  - groups:
+    - ""
+    kinds:
+    - Pod
+    versions:
+    - v1
+  location: spec.initContainers[name:*].resources.limits.cpu
+  match:
+    namespaces:
+    - cert-manager
+    - gatekeeper-system
+    - minio-operator
+    - minio-tenant
+    - replicator
+    - spark-app
+    - spark-operator
+    - vault
+  parameters:
+    assign:
+      value: "1"
+    pathTests:
+    - condition: MustNotExist
+      subPath: spec.initContainers[name:*].resources.limits.cpu
+---
+apiVersion: mutations.gatekeeper.sh/v1
+kind: Assign
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+    argocd.argoproj.io/sync-wave: "-30"
+  name: add-initcontainer-resource-cpu-requests
+spec:
+  applyTo:
+  - groups:
+    - ""
+    kinds:
+    - Pod
+    versions:
+    - v1
+  location: spec.initContainers[name:*].resources.requests.cpu
+  match:
+    namespaces:
+    - cert-manager
+    - gatekeeper-system
+    - minio-operator
+    - minio-tenant
+    - replicator
+    - spark-app
+    - spark-operator
+    - vault
+  parameters:
+    assign:
+      value: 100m
+    pathTests:
+    - condition: MustNotExist
+      subPath: spec.initContainers[name:*].resources.requests.cpu
+---
+apiVersion: mutations.gatekeeper.sh/v1
+kind: Assign
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+    argocd.argoproj.io/sync-wave: "-30"
+  name: add-initcontainer-resource-memory-limits
+spec:
+  applyTo:
+  - groups:
+    - ""
+    kinds:
+    - Pod
+    versions:
+    - v1
+  location: spec.initContainers[name:*].resources.limits.memory
+  match:
+    namespaces:
+    - cert-manager
+    - gatekeeper-system
+    - minio-operator
+    - minio-tenant
+    - replicator
+    - spark-app
+    - spark-operator
+    - vault
+  parameters:
+    assign:
+      value: 4Gi
+    pathTests:
+    - condition: MustNotExist
+      subPath: spec.initContainers[name:*].resources.limits.memory
+---
+apiVersion: mutations.gatekeeper.sh/v1
+kind: Assign
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+    argocd.argoproj.io/sync-wave: "-30"
+  name: add-initcontainer-resource-memory-requests
+spec:
+  applyTo:
+  - groups:
+    - ""
+    kinds:
+    - Pod
+    versions:
+    - v1
+  location: spec.initContainers[name:*].resources.requests.memory
+  match:
+    namespaces:
+    - cert-manager
+    - gatekeeper-system
+    - minio-operator
+    - minio-tenant
+    - replicator
+    - spark-app
+    - spark-operator
+    - vault
+  parameters:
+    assign:
+      value: 256Mi
+    pathTests:
+    - condition: MustNotExist
+      subPath: spec.initContainers[name:*].resources.requests.memory
+---
+apiVersion: templates.gatekeeper.sh/v1
+kind: ConstraintTemplate
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+    argocd.argoproj.io/sync-wave: "-30"
+    description: |-
+      Requires containers to have memory and CPU limits set and constrains limits to be within the specified maximum values.
+      https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+    metadata.gatekeeper.sh/title: Container Limits
+    metadata.gatekeeper.sh/version: 1.0.1
+  name: k8scontainerlimits
+spec:
+  crd:
+    spec:
+      names:
+        kind: K8sContainerLimits
+      validation:
+        openAPIV3Schema:
+          properties:
+            cpu:
+              description: The maximum allowed cpu limit on a Pod, exclusive.
+              type: string
+            exemptImages:
+              description: |-
+                Any container that uses an image that matches an entry in this list will be excluded from enforcement. Prefix-matching can be signified with `*`. For example: `my-image-*`.
+                It is recommended that users use the fully-qualified Docker image name (e.g. start with a domain name) in order to avoid unexpectedly exempting images from an untrusted repository.
+              items:
+                type: string
+              type: array
+            memory:
+              description: The maximum allowed memory limit on a Pod, exclusive.
+              type: string
+          type: object
+  targets:
+  - libs:
+    - |
+      package lib.exempt_container
+
+      is_exempt(container) {
+          exempt_images := object.get(object.get(input, "parameters", {}), "exemptImages", [])
+          img := container.image
+          exemption := exempt_images[_]
+          _matches_exemption(img, exemption)
+      }
+
+      _matches_exemption(img, exemption) {
+          not endswith(exemption, "*")
+          exemption == img
+      }
+
+      _matches_exemption(img, exemption) {
+          endswith(exemption, "*")
+          prefix := trim_suffix(exemption, "*")
+          startswith(img, prefix)
+      }
+    rego: |
+      package k8scontainerlimits
+
+      import data.lib.exempt_container.is_exempt
+
+      missing(obj, field) = true {
+        not obj[field]
+      }
+
+      missing(obj, field) = true {
+        obj[field] == ""
+      }
+
+      canonify_cpu(orig) = new {
+        is_number(orig)
+        new := orig * 1000
+      }
+
+      canonify_cpu(orig) = new {
+        not is_number(orig)
+        endswith(orig, "m")
+        new := to_number(replace(orig, "m", ""))
+      }
+
+      canonify_cpu(orig) = new {
+        not is_number(orig)
+        not endswith(orig, "m")
+        regex.match("^[0-9]+(\\.[0-9]+)?$", orig)
+        new := to_number(orig) * 1000
+      }
+
+      # 10 ** 21
+      mem_multiple("E") = 1000000000000000000000 { true }
+
+      # 10 ** 18
+      mem_multiple("P") = 1000000000000000000 { true }
+
+      # 10 ** 15
+      mem_multiple("T") = 1000000000000000 { true }
+
+      # 10 ** 12
+      mem_multiple("G") = 1000000000000 { true }
+
+      # 10 ** 9
+      mem_multiple("M") = 1000000000 { true }
+
+      # 10 ** 6
+      mem_multiple("k") = 1000000 { true }
+
+      # 10 ** 3
+      mem_multiple("") = 1000 { true }
+
+      # Kubernetes accepts millibyte precision when it probably shouldn't.
+      # https://github.com/kubernetes/kubernetes/issues/28741
+      # 10 ** 0
+      mem_multiple("m") = 1 { true }
+
+      # 1000 * 2 ** 10
+      mem_multiple("Ki") = 1024000 { true }
+
+      # 1000 * 2 ** 20
+      mem_multiple("Mi") = 1048576000 { true }
+
+      # 1000 * 2 ** 30
+      mem_multiple("Gi") = 1073741824000 { true }
+
+      # 1000 * 2 ** 40
+      mem_multiple("Ti") = 1099511627776000 { true }
+
+      # 1000 * 2 ** 50
+      mem_multiple("Pi") = 1125899906842624000 { true }
+
+      # 1000 * 2 ** 60
+      mem_multiple("Ei") = 1152921504606846976000 { true }
+
+      get_suffix(mem) = suffix {
+        not is_string(mem)
+        suffix := ""
+      }
+
+      get_suffix(mem) = suffix {
+        is_string(mem)
+        count(mem) > 0
+        suffix := substring(mem, count(mem) - 1, -1)
+        mem_multiple(suffix)
+      }
+
+      get_suffix(mem) = suffix {
+        is_string(mem)
+        count(mem) > 1
+        suffix := substring(mem, count(mem) - 2, -1)
+        mem_multiple(suffix)
+      }
+
+      get_suffix(mem) = suffix {
+        is_string(mem)
+        count(mem) > 1
+        not mem_multiple(substring(mem, count(mem) - 1, -1))
+        not mem_multiple(substring(mem, count(mem) - 2, -1))
+        suffix := ""
+      }
+
+      get_suffix(mem) = suffix {
+        is_string(mem)
+        count(mem) == 1
+        not mem_multiple(substring(mem, count(mem) - 1, -1))
+        suffix := ""
+      }
+
+      get_suffix(mem) = suffix {
+        is_string(mem)
+        count(mem) == 0
+        suffix := ""
+      }
+
+      canonify_mem(orig) = new {
+        is_number(orig)
+        new := orig * 1000
+      }
+
+      canonify_mem(orig) = new {
+        not is_number(orig)
+        suffix := get_suffix(orig)
+        raw := replace(orig, suffix, "")
+        regex.match("^[0-9]+(\\.[0-9]+)?$", raw)
+        new := to_number(raw) * mem_multiple(suffix)
+      }
+
+      violation[{"msg": msg}] {
+        general_violation[{"msg": msg, "field": "containers"}]
+      }
+
+      violation[{"msg": msg}] {
+        general_violation[{"msg": msg, "field": "initContainers"}]
+      }
+
+      # Ephemeral containers not checked as it is not possible to set field.
+
+      general_violation[{"msg": msg, "field": field}] {
+        container := input.review.object.spec[field][_]
+        not is_exempt(container)
+        cpu_orig := container.resources.limits.cpu
+        not canonify_cpu(cpu_orig)
+        msg := sprintf("container <%v> cpu limit <%v> could not be parsed", [container.name, cpu_orig])
+      }
+
+      general_violation[{"msg": msg, "field": field}] {
+        container := input.review.object.spec[field][_]
+        not is_exempt(container)
+        mem_orig := container.resources.limits.memory
+        not canonify_mem(mem_orig)
+        msg := sprintf("container <%v> memory limit <%v> could not be parsed", [container.name, mem_orig])
+      }
+
+      general_violation[{"msg": msg, "field": field}] {
+        container := input.review.object.spec[field][_]
+        not is_exempt(container)
+        not container.resources
+        msg := sprintf("container <%v> has no resource limits", [container.name])
+      }
+
+      general_violation[{"msg": msg, "field": field}] {
+        container := input.review.object.spec[field][_]
+        not is_exempt(container)
+        not container.resources.limits
+        msg := sprintf("container <%v> has no resource limits", [container.name])
+      }
+
+      general_violation[{"msg": msg, "field": field}] {
+        container := input.review.object.spec[field][_]
+        not is_exempt(container)
+        missing(container.resources.limits, "cpu")
+        msg := sprintf("container <%v> has no cpu limit", [container.name])
+      }
+
+      general_violation[{"msg": msg, "field": field}] {
+        container := input.review.object.spec[field][_]
+        not is_exempt(container)
+        missing(container.resources.limits, "memory")
+        msg := sprintf("container <%v> has no memory limit", [container.name])
+      }
+
+      general_violation[{"msg": msg, "field": field}] {
+        container := input.review.object.spec[field][_]
+        not is_exempt(container)
+        cpu_orig := container.resources.limits.cpu
+        cpu := canonify_cpu(cpu_orig)
+        max_cpu_orig := input.parameters.cpu
+        max_cpu := canonify_cpu(max_cpu_orig)
+        cpu > max_cpu
+        msg := sprintf("container <%v> cpu limit <%v> is higher than the maximum allowed of <%v>", [container.name, cpu_orig, max_cpu_orig])
+      }
+
+      general_violation[{"msg": msg, "field": field}] {
+        container := input.review.object.spec[field][_]
+        not is_exempt(container)
+        mem_orig := container.resources.limits.memory
+        mem := canonify_mem(mem_orig)
+        max_mem_orig := input.parameters.memory
+        max_mem := canonify_mem(max_mem_orig)
+        mem > max_mem
+        msg := sprintf("container <%v> memory limit <%v> is higher than the maximum allowed of <%v>", [container.name, mem_orig, max_mem_orig])
+      }
+    target: admission.k8s.gatekeeper.sh
+---
+apiVersion: templates.gatekeeper.sh/v1
+kind: ConstraintTemplate
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+    argocd.argoproj.io/sync-wave: "-30"
+    description: |-
+      Requires containers to have memory and CPU requests set and constrains requests to be within the specified maximum values.
+      https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+    metadata.gatekeeper.sh/title: Container Requests
+    metadata.gatekeeper.sh/version: 1.0.1
+  name: k8scontainerrequests
+spec:
+  crd:
+    spec:
+      names:
+        kind: K8sContainerRequests
+      validation:
+        openAPIV3Schema:
+          properties:
+            cpu:
+              description: The maximum allowed cpu request on a Pod, exclusive.
+              type: string
+            exemptImages:
+              description: |-
+                Any container that uses an image that matches an entry in this list will be excluded from enforcement. Prefix-matching can be signified with `*`. For example: `my-image-*`.
+                It is recommended that users use the fully-qualified Docker image name (e.g. start with a domain name) in order to avoid unexpectedly exempting images from an untrusted repository.
+              items:
+                type: string
+              type: array
+            memory:
+              description: The maximum allowed memory request on a Pod, exclusive.
+              type: string
+          type: object
+  targets:
+  - libs:
+    - |
+      package lib.exempt_container
+
+      is_exempt(container) {
+          exempt_images := object.get(object.get(input, "parameters", {}), "exemptImages", [])
+          img := container.image
+          exemption := exempt_images[_]
+          _matches_exemption(img, exemption)
+      }
+
+      _matches_exemption(img, exemption) {
+          not endswith(exemption, "*")
+          exemption == img
+      }
+
+      _matches_exemption(img, exemption) {
+          endswith(exemption, "*")
+          prefix := trim_suffix(exemption, "*")
+          startswith(img, prefix)
+      }
+    rego: |
+      package k8scontainerrequests
+
+      import data.lib.exempt_container.is_exempt
+
+      missing(obj, field) = true {
+        not obj[field]
+      }
+
+      missing(obj, field) = true {
+        obj[field] == ""
+      }
+
+      canonify_cpu(orig) = new {
+        is_number(orig)
+        new := orig * 1000
+      }
+
+      canonify_cpu(orig) = new {
+        not is_number(orig)
+        endswith(orig, "m")
+        new := to_number(replace(orig, "m", ""))
+      }
+
+      canonify_cpu(orig) = new {
+        not is_number(orig)
+        not endswith(orig, "m")
+        regex.match("^[0-9]+(\\.[0-9]+)?$", orig)
+        new := to_number(orig) * 1000
+      }
+
+      # 10 ** 21
+      mem_multiple("E") = 1000000000000000000000 { true }
+
+      # 10 ** 18
+      mem_multiple("P") = 1000000000000000000 { true }
+
+      # 10 ** 15
+      mem_multiple("T") = 1000000000000000 { true }
+
+      # 10 ** 12
+      mem_multiple("G") = 1000000000000 { true }
+
+      # 10 ** 9
+      mem_multiple("M") = 1000000000 { true }
+
+      # 10 ** 6
+      mem_multiple("k") = 1000000 { true }
+
+      # 10 ** 3
+      mem_multiple("") = 1000 { true }
+
+      # Kubernetes accepts millibyte precision when it probably shouldn't.
+      # https://github.com/kubernetes/kubernetes/issues/28741
+      # 10 ** 0
+      mem_multiple("m") = 1 { true }
+
+      # 1000 * 2 ** 10
+      mem_multiple("Ki") = 1024000 { true }
+
+      # 1000 * 2 ** 20
+      mem_multiple("Mi") = 1048576000 { true }
+
+      # 1000 * 2 ** 30
+      mem_multiple("Gi") = 1073741824000 { true }
+
+      # 1000 * 2 ** 40
+      mem_multiple("Ti") = 1099511627776000 { true }
+
+      # 1000 * 2 ** 50
+      mem_multiple("Pi") = 1125899906842624000 { true }
+
+      # 1000 * 2 ** 60
+      mem_multiple("Ei") = 1152921504606846976000 { true }
+
+      get_suffix(mem) = suffix {
+        not is_string(mem)
+        suffix := ""
+      }
+
+      get_suffix(mem) = suffix {
+        is_string(mem)
+        count(mem) > 0
+        suffix := substring(mem, count(mem) - 1, -1)
+        mem_multiple(suffix)
+      }
+
+      get_suffix(mem) = suffix {
+        is_string(mem)
+        count(mem) > 1
+        suffix := substring(mem, count(mem) - 2, -1)
+        mem_multiple(suffix)
+      }
+
+      get_suffix(mem) = suffix {
+        is_string(mem)
+        count(mem) > 1
+        not mem_multiple(substring(mem, count(mem) - 1, -1))
+        not mem_multiple(substring(mem, count(mem) - 2, -1))
+        suffix := ""
+      }
+
+      get_suffix(mem) = suffix {
+        is_string(mem)
+        count(mem) == 1
+        not mem_multiple(substring(mem, count(mem) - 1, -1))
+        suffix := ""
+      }
+
+      get_suffix(mem) = suffix {
+        is_string(mem)
+        count(mem) == 0
+        suffix := ""
+      }
+
+      canonify_mem(orig) = new {
+        is_number(orig)
+        new := orig * 1000
+      }
+
+      canonify_mem(orig) = new {
+        not is_number(orig)
+        suffix := get_suffix(orig)
+        raw := replace(orig, suffix, "")
+        regex.match("^[0-9]+(\\.[0-9]+)?$", raw)
+        new := to_number(raw) * mem_multiple(suffix)
+      }
+
+      violation[{"msg": msg}] {
+        general_violation[{"msg": msg, "field": "containers"}]
+      }
+
+      violation[{"msg": msg}] {
+        general_violation[{"msg": msg, "field": "initContainers"}]
+      }
+
+      # Ephemeral containers not checked as it is not possible to set field.
+
+      general_violation[{"msg": msg, "field": field}] {
+        container := input.review.object.spec[field][_]
+        not is_exempt(container)
+        cpu_orig := container.resources.requests.cpu
+        not canonify_cpu(cpu_orig)
+        msg := sprintf("container <%v> cpu request <%v> could not be parsed", [container.name, cpu_orig])
+      }
+
+      general_violation[{"msg": msg, "field": field}] {
+        container := input.review.object.spec[field][_]
+        not is_exempt(container)
+        mem_orig := container.resources.requests.memory
+        not canonify_mem(mem_orig)
+        msg := sprintf("container <%v> memory request <%v> could not be parsed", [container.name, mem_orig])
+      }
+
+      general_violation[{"msg": msg, "field": field}] {
+        container := input.review.object.spec[field][_]
+        not is_exempt(container)
+        not container.resources
+        msg := sprintf("container <%v> has no resource requests", [container.name])
+      }
+
+      general_violation[{"msg": msg, "field": field}] {
+        container := input.review.object.spec[field][_]
+        not is_exempt(container)
+        not container.resources.requests
+        msg := sprintf("container <%v> has no resource requests", [container.name])
+      }
+
+      general_violation[{"msg": msg, "field": field}] {
+        container := input.review.object.spec[field][_]
+        not is_exempt(container)
+        missing(container.resources.requests, "cpu")
+        msg := sprintf("container <%v> has no cpu request", [container.name])
+      }
+
+      general_violation[{"msg": msg, "field": field}] {
+        container := input.review.object.spec[field][_]
+        not is_exempt(container)
+        missing(container.resources.requests, "memory")
+        msg := sprintf("container <%v> has no memory request", [container.name])
+      }
+
+      general_violation[{"msg": msg, "field": field}] {
+        container := input.review.object.spec[field][_]
+        not is_exempt(container)
+        cpu_orig := container.resources.requests.cpu
+        cpu := canonify_cpu(cpu_orig)
+        max_cpu_orig := input.parameters.cpu
+        max_cpu := canonify_cpu(max_cpu_orig)
+        cpu > max_cpu
+        msg := sprintf("container <%v> cpu request <%v> is higher than the maximum allowed of <%v>", [container.name, cpu_orig, max_cpu_orig])
+      }
+
+      general_violation[{"msg": msg, "field": field}] {
+        container := input.review.object.spec[field][_]
+        not is_exempt(container)
+        mem_orig := container.resources.requests.memory
+        mem := canonify_mem(mem_orig)
+        max_mem_orig := input.parameters.memory
+        max_mem := canonify_mem(max_mem_orig)
+        mem > max_mem
+        msg := sprintf("container <%v> memory request <%v> is higher than the maximum allowed of <%v>", [container.name, mem_orig, max_mem_orig])
+      }
+    target: admission.k8s.gatekeeper.sh
 ---
 apiVersion: trust.cert-manager.io/v1alpha1
 kind: Bundle

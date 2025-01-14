@@ -1110,6 +1110,44 @@ spec:
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
+  annotations:
+    argocd.argoproj.io/hook: Sync
+    argocd.argoproj.io/sync-wave: "-10"
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+  name: jenkins
+  namespace: argocd
+spec:
+  destination:
+    namespace: jenkins
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    chart: jenkins
+    helm:
+      valuesObject:
+        controller:
+          admin:
+            password: jenkins
+            user: admin
+        ingress:
+          enabled: false
+        persistence:
+          enabled: true
+          existingClaim: jenkins-pvc
+    repoURL: https://charts.jenkins.io/
+    targetRevision: 5.7.*
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true
+    - ServerSideApply=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
   name: kafdrop
   namespace: argocd
 spec:
@@ -1184,7 +1222,7 @@ spec:
           podAntiAffinityPreset: hard
           persistence:
             enabled: true
-            storageClass: local-path
+            storageClass: longhorn
             accessModes:
               - ReadWriteOnce
             size: 2Gi
@@ -1209,7 +1247,7 @@ spec:
           podAntiAffinityPreset: hard
           persistence:
             enabled: true
-            storageClass: local-path
+            storageClass: longhorn
             accessModes:
               - ReadWriteOnce
             size: 5Gi
@@ -1420,6 +1458,35 @@ spec:
             url: http://monitoring-stack-prometheus-server.monitoring
     repoURL: https://glaciation-heu.github.io/kg_exporter/helm-charts/
     targetRevision: 0.*.*
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true
+    - ServerSideApply=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  annotations:
+    argocd.argoproj.io/hook: Sync
+    argocd.argoproj.io/sync-wave: "-10"
+  name: longhorn
+  namespace: argocd
+spec:
+  destination:
+    namespace: longhorn-system
+    server: https://kubernetes.default.svc
+  project: default
+  sources:
+  - chart: longhorn
+    helm:
+      values: |
+        preUpgradeChecker:
+          jobEnabled: false
+    repoURL: https://charts.longhorn.io/
+    targetRevision: v1.6.0
   syncPolicy:
     automated:
       prune: true
@@ -1825,7 +1892,7 @@ spec:
               annotations: null
               enabled: true
               size: 2Gi
-              storageClassName: local-path
+              storageClassName: longhorn
               storageDirectory: /data
             max_outstanding_catchup: null
             memStorage:
@@ -2274,11 +2341,11 @@ spec:
           auditStorage:
             enabled: true
             size: 10Gi
-            storageClass: local-path
+            storageClass: longhorn
           dataStorage:
             enabled: true
             size: 10Gi
-            storageClass: local-path
+            storageClass: longhorn
           enabled: true
           extraEnvironmentVars:
             VAULT_CACERT: /vault/userconfig/vault-tls/ca.crt
@@ -3113,6 +3180,25 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
+  name: jenkins-ingress
+  namespace: jenkins
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: jenkins.integration
+    http:
+      paths:
+      - backend:
+          service:
+            name: jenkins
+            port:
+              number: 8080
+        path: /
+        pathType: Prefix
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
   name: kafdrop-ingress
   namespace: kafdrop
 spec:
@@ -3127,6 +3213,25 @@ spec:
             port:
               number: 80
         path: /kafdrop/
+        pathType: Prefix
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: longhorn-ingress
+  namespace: longhorn-system
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: longhorn.integration
+    http:
+      paths:
+      - backend:
+          service:
+            name: longhorn-frontend
+            port:
+              number: 80
+        path: /
         pathType: Prefix
 ---
 apiVersion: networking.k8s.io/v1

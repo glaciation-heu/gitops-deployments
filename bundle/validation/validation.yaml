@@ -1607,7 +1607,8 @@ spec:
         ingress:
           api:
             annotations:
-              nginx.ingress.kubernetes.io/backend-protocol: HTTPS
+              nginx.org/redirect-to-https: "true"
+              nginx.org/ssl-services: minio
             enabled: true
             host: glaciation-tenant.integration
             ingressClassName: nginx
@@ -1615,7 +1616,8 @@ spec:
             pathType: Prefix
           console:
             annotations:
-              nginx.ingress.kubernetes.io/backend-protocol: HTTPS
+              nginx.org/redirect-to-https: "true"
+              nginx.org/ssl-services: glaciation-console
             enabled: true
             host: glaciation-tenant-console.integration
             ingressClassName: nginx
@@ -2416,7 +2418,8 @@ spec:
           ingress:
             activeService: false
             annotations:
-              nginx.ingress.kubernetes.io/backend-protocol: HTTPS
+              nginx.org/redirect-to-https: "true"
+              nginx.org/ssl-services: vault
             enabled: true
             hosts:
             - host: vault.validation

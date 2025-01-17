@@ -1,0 +1,29 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"v1","kind":"Service","metadata":{"annotations":{},"name":"opentraj-service","namespace":"dell-uc2"},"spec":{"ports":[{"port":80,"protocol":"TCP","targetPort":5000}],"selector":{"app":"opentraj"},"type":"ClusterIP"}}
+  creationTimestamp: "2025-01-09T17:37:29Z"
+  name: opentraj-service
+  namespace: dell-uc2
+  resourceVersion: "18589439"
+  uid: 4e86ff5a-14ce-4a08-8424-6bf7f2dd33df
+spec:
+  clusterIP: 10.97.17.161
+  clusterIPs:
+  - 10.97.17.161
+  internalTrafficPolicy: Cluster
+  ipFamilies:
+  - IPv4
+  ipFamilyPolicy: SingleStack
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 5000
+  selector:
+    app: opentraj
+  sessionAffinity: None
+  type: ClusterIP
+status:
+  loadBalancer: {}

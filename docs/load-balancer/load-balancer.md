@@ -15,22 +15,18 @@ It is not the best practice. We use this approach for a quick start. Consider to
    sudo apt install nginx
     ```
 
-1. Copy [kubernetes.conf](kubernetes.conf) to the node
-   
-   ```shell
-   scp kubernetes.conf <node>:/etc/nginx/sites-available/
-   ```
-
 1. Disable default config
    
    ```shell
-   rm /etc/nginx/sites-enabled/default
+   sudo rm /etc/nginx/sites-enabled/default
    ```
+   
+1. Append the text from [kubernetes.conf](kubernetes.conf) to the end of `/etc/nginx/nginx.conf`
 
-1. Enable the new config
+1. Check the config
 
    ```shell
-   ln -s /etc/nginx/sites-available/kubernetes.conf /etc/nginx/sites-enabled/kubernetes.conf
+   sudo nginx -t
    ```
 
 1. Reload Nginx

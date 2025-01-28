@@ -1,0 +1,35 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: jena-fuseki-exporter
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/hook: Sync
+    argocd.argoproj.io/sync-wave: "-10"
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+spec:
+  destination:
+    namespace: dkg-engine
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    repoURL: https://glaciation-heu.github.io/jena-fuseki-exporter/helm-charts/
+    chart: jena-fuseki-exporter
+    targetRevision: 0.*.*
+    helm:
+      valuesObject:
+        resources:
+          limits:
+            cpu: 500m
+            memory: 200M
+          requests:
+            cpu: 500m
+            memory: 200M
+  syncPolicy:
+    automated:
+     prune: true
+     selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

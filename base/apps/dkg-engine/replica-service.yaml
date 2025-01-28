@@ -1,0 +1,98 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: replica-service
+  namespace: argocd
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+spec:
+  destination:
+    namespace: dkg-engine
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    repoURL: https://HIRO-MicroDataCenters-BV.github.io/rhio/helm-charts/
+    chart: rhio
+    targetRevision: 0.*.*
+    helm:
+      valuesObject:
+        secretKey: "3366656464356265336466306662343365373332386165303834336338636231" # the key for integration cluster
+
+        tolerations:
+          - key: "node-role.kubernetes.io/control-plane"
+            operator: "Equal"
+            effect: "NoSchedule"        
+
+        nodeSelector:
+          master: "true"
+
+        debug: =DEBUG
+
+        services:
+          type: NodePort
+          # the port for the p2p networking endpoint
+          network:
+            port: 9102
+            nodePort: 31100
+          # the port for the HTTP health endpoint
+          health:
+            port: 8080
+
+        configuration:
+
+          nodes:
+            - public_key: "b2030d8df6c0a8bc53513e1c1746446ff00424e39f0ba25441f76b3d68752b8c"
+              endpoints:
+                - "10.14.2.5:31100"
+
+          s3:
+            endpoint: "http://dkg-hl.dkg-engine.svc.cluster.local:9000"
+            region: "eu-central-1"
+            credentials:
+              access_key: "minio"
+              secret_key: "minio123"
+
+          # NATS
+          # Endpoint of the local NATS Server with JetStreams enabled.
+          #
+          nats:
+            endpoint: "nats-jetstream.dkg-engine.svc.cluster.local:4222"
+          #   credentials:
+          #     username: "rhio"
+          #     password: "rhio_password"
+          #     # Alternative authentication strategies:
+          #     nkey: "..."
+          #     token: "..."
+
+          publish:
+            # We're publishing all files given in our local bucket.
+            #
+            # s3_buckets:
+            #   - "one"
+
+            # We're publishing any NATS message matching this NATS subject (wildcards
+            # supported) coming from our local JetStream.
+            #
+            nats_subjects:
+              - subject: "dkg-engine.energy.integration"
+                stream: "dkg-stream"
+
+          subscribe:
+
+            nats_subjects:
+              - subject: "dkg-engine.energy.validation"
+                public_key: "b2030d8df6c0a8bc53513e1c1746446ff00424e39f0ba25441f76b3d68752b8c"
+                stream: "dkg-stream"
+
+            # s3_buckets:
+            #   - public_key: "b2030d8df6c0a8bc53513e1c1746446ff00424e39f0ba25441f76b3d68752b8c"
+            #     remote_bucket: "two"
+            #     local_bucket: "two"
+
+  syncPolicy:
+    automated:
+     prune: true
+     selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

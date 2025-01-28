@@ -8,5 +8,9 @@ resources:
   - ui-gateway.yaml
   - trade-off-service.yaml
   - kg-exporter.yaml
-  - nats.yaml
+  - nats.crds.yml
+  - nats.nack.yaml
+  - nats.nats.yaml
+  - nats.stream.yaml
   - dkg-tenant.yaml
+  - replica-service.yaml

@@ -84,3 +84,8 @@ spec:
                     target_label: instance
                   - target_label: __address__
                     replacement: monitoring-stack-prometheus-snmp-exporter.monitoring.svc.cluster.local:9116  # The SNMP exporter's real hostname:port.      
+              - job_name: 'jena-fuseki-exporter'
+                scrape_interval: 10m
+                static_configs:
+                - targets:
+                  - 'jena-fuseki-exporter.dkg-engine.svc.cluster.local'

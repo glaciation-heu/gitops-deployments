@@ -63,3 +63,43 @@ spec:
     helm: 
       valuesObject: 
         ingressHostName: prediction.validation
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: replica-service
+  namespace: argocd
+spec:
+  source:
+    helm:
+      valuesObject:
+        secretKey: 162ba197542be77b3e525f3afec7b0ad54b89997b64c5df72d0e9993bbc9efcc
+        configuration:
+          nodes:
+            - public_key: "d38bceb16032b72f0a4253668e7d7bdd4cfae1a61de2e6a696329e5e537945f4"
+              endpoints:
+                - "10.1.14.160:31100"
+          publish:
+            # We're publishing all files given in our local bucket.
+            #
+            # s3_buckets:
+            #   - "two"
+
+            # We're publishing any NATS message matching this NATS subject (wildcards
+            # supported) coming from our local JetStream.
+            #
+            nats_subjects:
+              - subject: "dkg-engine.energy.validation"
+                stream: "dkg-stream"
+
+          subscribe:
+
+            nats_subjects:
+              - subject: "dkg-engine.energy.integration"
+                public_key: "d38bceb16032b72f0a4253668e7d7bdd4cfae1a61de2e6a696329e5e537945f4"
+                stream: "dkg-stream"
+
+            # s3_buckets:
+            #   - public_key: "d38bceb16032b72f0a4253668e7d7bdd4cfae1a61de2e6a696329e5e537945f4"
+            #     remote_bucket: "one"
+            #     local_bucket: "one"

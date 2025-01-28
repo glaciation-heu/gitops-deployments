@@ -9,3 +9,4 @@ resources:
   - ./semantification
   - ./mef-sog-uc1
   - ./dell-uc2
+  - ./security

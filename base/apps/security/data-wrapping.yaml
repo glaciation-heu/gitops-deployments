@@ -25,7 +25,9 @@ spec:
                 # NOTE: To make sure the certificate is trusted by clients we should use
                 # something like Let's Encrypt
                 cert-manager.io/cluster-issuer: "private-ca-issuer"
-                nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+                ingress.kubernetes.io/ssl-redirect: "true"
+                nginx.org/redirect-to-https: "true"
+                nginx.org/ssl-services: "minio"
               tls:
               - hosts:
                 - glaciation-tenant.integration
@@ -40,7 +42,9 @@ spec:
                 # NOTE: To make sure the certificate is trusted by clients we should use
                 # something like Let's Encrypt
                 cert-manager.io/cluster-issuer: "private-ca-issuer"
-                nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+                ingress.kubernetes.io/ssl-redirect: "true"
+                nginx.org/redirect-to-https: "true"
+                nginx.org/ssl-services: "glaciation-console"
               tls:
               - hosts:
                 - glaciation-tenant-console.integration
@@ -63,7 +67,9 @@ spec:
                 # NOTE: To make sure the certificate is trusted by clients we should use
                 # something like Let's Encrypt
                 cert-manager.io/cluster-issuer: "private-ca-issuer"
-                nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+                ingress.kubernetes.io/ssl-redirect: "true"
+                nginx.org/redirect-to-https: "true"
+                nginx.org/ssl-services: "data-wrapping-vault"
               tls:
               - hosts:
                 - vault.integration

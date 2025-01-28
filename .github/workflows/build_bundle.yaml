@@ -21,9 +21,7 @@ jobs:
             matrix:
                 overlay:
                     - 'integration'
-                    - 'integration-security'
                     - 'validation'
-                    - 'validation-security'
         steps:
 
         - id: check-branch-exists

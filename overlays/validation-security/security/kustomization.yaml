@@ -1,23 +1,58 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
-  - ../../../base/prereqs
   - ../../../base/apps/security
 patches:
-  - path: patch-optional.yaml
   - patch: |-
       - op: replace
-        path: /spec/sources/0/helm/valuesObject/server/ingress/hosts/0/host
+        path: /spec/source/helm/valuesObject/data-sanitization/ingress/hosts/0/host
+        value: data-sanitization.validation
+      - op: replace
+        path: /spec/source/helm/valuesObject/data-sanitization/ingress/tls/0/hosts/0
+        value: data-sanitization.validation
+      - op: replace
+        path: /spec/source/helm/valuesObject/spark-history-server/ingress/hosts/0/host
+        value: spark-history-server.validation
+      - op: replace
+        path: /spec/source/helm/valuesObject/spark-history-server/ingress/tls/0/hosts/0
+        value: spark-history-server.validation
+    target:
+      group: argoproj.io
+      version: v1alpha1
+      kind: Application
+      name: data-sanitization
+      namespace: argocd
+  - patch: |-
+      - op: replace
+        path: /spec/source/helm/valuesObject/tenant/ingress/api/host
+        value: glaciation-tenant.validation
+      - op: replace
+        path: /spec/source/helm/valuesObject/tenant/ingress/api/tls/0/hosts/0
+        value: glaciation-tenant.validation
+      - op: replace
+        path: /spec/source/helm/valuesObject/tenant/ingress/console/host
+        value: glaciation-tenant-console.validation
+      - op: replace
+        path: /spec/source/helm/valuesObject/tenant/ingress/console/tls/0/hosts/0
+        value: glaciation-tenant-console.validation
+      - op: replace
+        path: /spec/source/helm/valuesObject/vault/server/ingress/hosts/0/host
+        value: vault.validation
+      - op: replace
+        path: /spec/source/helm/valuesObject/vault/server/ingress/tls/0/hosts/0
         value: vault.validation
     target:
       group: argoproj.io
       version: v1alpha1
       kind: Application
-      name: vault
+      name: data-wrapping
       namespace: argocd
   - patch: |-
       - op: replace
         path: /spec/source/helm/valuesObject/ingress/hosts/0/host
+        value: gpm.validation
+      - op: replace
+        path: /spec/source/helm/valuesObject/ingress/tls/0/hosts/0
         value: gpm.validation
     target:
       group: argoproj.io

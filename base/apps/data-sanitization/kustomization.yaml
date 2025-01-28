@@ -1,7 +1,0 @@
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-resources:
-  - ./manual/data-sanitization-smoke-tests.yaml
-  - data-sanitization-service.yaml
-  - spark-history-server.yaml
-  - spark-operator.yaml

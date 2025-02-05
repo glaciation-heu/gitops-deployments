@@ -12,6 +12,10 @@ spec:
     - chart: nvidia-device-plugin
       repoURL: https://nvidia.github.io/k8s-device-plugin/stable
       targetRevision: 0.*.*
+      helm:
+        valuesObject:
+          gfd:
+            enabled: true
   destination:
     server: https://kubernetes.default.svc
     namespace: nvidia-device-plugin

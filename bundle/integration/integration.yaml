@@ -2532,6 +2532,10 @@ spec:
   project: default
   sources:
   - chart: nvidia-device-plugin
+    helm:
+      valuesObject:
+        gfd:
+          enabled: true
     repoURL: https://nvidia.github.io/k8s-device-plugin/stable
     targetRevision: 0.*.*
   syncPolicy:

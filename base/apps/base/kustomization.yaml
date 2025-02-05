@@ -7,3 +7,4 @@ resources:
   - jena-fuseki-exporter.yaml
   - longhorn.yaml
   - jenkins.yaml
+  - nvidia-device-plugin.yaml

@@ -2131,7 +2131,7 @@ spec:
         elaborationTimbMs:
           logLevelJpa: true
     repoURL: https://glaciation-heu.github.io/mef-sog-uc1/
-    targetRevision: 1.*.*
+    targetRevision: 2.*.*
   syncPolicy:
     automated:
       prune: true

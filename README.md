@@ -5,8 +5,8 @@ This repository contains GitOps definitions for GLACIATION Platform.
 ## Clusters
 
 Platform installation to Kubernetes cluster is called GLACIATION Node. See more details about deployed nodes: 
-* [Integration cluster](integration/README.md)
-* [Validation cluster](UC2/README.md)
+* [Integration cluster](http://argocd.integration)
+* [Validation cluster](http://argocd.validation)
 
 ## CI/CD
 

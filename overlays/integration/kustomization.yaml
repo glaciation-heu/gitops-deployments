@@ -9,3 +9,4 @@ resources:
   - ./mef-sog-uc1
   - ./dell-uc2
   - ./dkg-engine
+  - ./security

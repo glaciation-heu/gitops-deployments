@@ -1489,6 +1489,114 @@ spec:
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "-12"
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+  name: admission-control
+  namespace: argocd
+spec:
+  destination:
+    namespace: gatekeeper-system
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    chart: admission-control
+    repoURL: https://glaciation-heu.github.io/security/helm-charts
+    targetRevision: 1.0.*
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true
+    - ServerSideApply=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "-11"
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+  name: certificate-management
+  namespace: argocd
+spec:
+  destination:
+    namespace: cert-manager
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    chart: certificate-management
+    repoURL: https://glaciation-heu.github.io/security/helm-charts
+    targetRevision: 1.0.*
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true
+    - ServerSideApply=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+  name: data-sanitization
+  namespace: argocd
+spec:
+  destination:
+    namespace: spark-operator
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    chart: data-sanitization
+    helm:
+      valuesObject:
+        data-sanitization:
+          ingress:
+            annotations:
+              cert-manager.io/cluster-issuer: private-ca-issuer
+            className: nginx
+            enabled: true
+            hosts:
+            - host: data-sanitization.validation
+              paths:
+              - path: /
+                pathType: Prefix
+            tls:
+            - hosts:
+              - data-sanitization.validation
+              secretName: data-sanitization-ingress
+        spark-history-server:
+          ingress:
+            annotations:
+              cert-manager.io/cluster-issuer: private-ca-issuer
+            className: nginx
+            enabled: true
+            hosts:
+            - host: spark-history-server.validation
+              paths:
+              - path: /
+                pathType: Prefix
+            tls:
+            - hosts:
+              - spark-history-server.validation
+              secretName: spark-history-server-ingress
+    repoURL: https://glaciation-heu.github.io/security/helm-charts
+    targetRevision: 1.0.*
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true
+    - ServerSideApply=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
   finalizers:
   - resources-finalizer.argocd.argoproj.io
   name: data-storage-service
@@ -1538,6 +1646,90 @@ spec:
       selfHeal: true
     syncOptions:
     - CreateNamespace=true
+    - ServerSideApply=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  annotations:
+    argocd.argoproj.io/compare-options: ServerSideDiff=true
+    argocd.argoproj.io/sync-wave: "-10"
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+  name: data-wrapping
+  namespace: argocd
+spec:
+  destination:
+    namespace: data-wrapping
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    chart: data-wrapping
+    helm:
+      valuesObject:
+        tenant:
+          ingress:
+            api:
+              annotations:
+                cert-manager.io/cluster-issuer: private-ca-issuer
+                ingress.kubernetes.io/ssl-redirect: "true"
+                nginx.org/redirect-to-https: "true"
+                nginx.org/ssl-services: minio
+              enabled: true
+              host: glaciation-tenant.validation
+              ingressClassName: nginx
+              path: /
+              pathType: Prefix
+              tls:
+              - hosts:
+                - glaciation-tenant.validation
+                secretName: minio-tenant-ingress
+            console:
+              annotations:
+                cert-manager.io/cluster-issuer: private-ca-issuer
+                ingress.kubernetes.io/ssl-redirect: "true"
+                nginx.org/redirect-to-https: "true"
+                nginx.org/ssl-services: glaciation-console
+              enabled: true
+              host: glaciation-tenant-console.validation
+              ingressClassName: nginx
+              path: /
+              pathType: Prefix
+              tls:
+              - hosts:
+                - glaciation-tenant-console.validation
+                secretName: minio-tenant-console-ingress
+        vault:
+          server:
+            auditStorage:
+              size: 1Gi
+              storageClass: longhorn
+            dataStorage:
+              size: 1Gi
+              storageClass: longhorn
+            ingress:
+              activeService: false
+              annotations:
+                cert-manager.io/cluster-issuer: private-ca-issuer
+                ingress.kubernetes.io/ssl-redirect: "true"
+                nginx.org/redirect-to-https: "true"
+                nginx.org/ssl-services: data-wrapping-vault
+              enabled: true
+              hosts:
+              - host: vault.validation
+              ingressClassName: nginx
+              tls:
+              - hosts:
+                - vault.validation
+                secretName: vault-ingress
+    repoURL: https://glaciation-heu.github.io/security/helm-charts
+    targetRevision: 1.0.*
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=false
     - ServerSideApply=true
 ---
 apiVersion: argoproj.io/v1alpha1
@@ -1609,6 +1801,48 @@ spec:
       prune: true
       selfHeal: true
     syncOptions:
+    - ServerSideApply=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+  name: gatekeeper-policy-manager
+  namespace: argocd
+spec:
+  destination:
+    namespace: gatekeeper-system
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    chart: gatekeeper-policy-manager
+    helm:
+      valuesObject:
+        config:
+          secretKey: supersecuresecretkey
+        ingress:
+          annotations:
+            cert-manager.io/cluster-issuer: private-ca-issuer
+          enabled: true
+          hosts:
+          - host: gpm.validation
+            pathType: Prefix
+            paths:
+            - /
+          ingressClassName: nginx
+          tls:
+          - hosts:
+            - gpm.validation
+            secretName: gpm-ingress
+    repoURL: https://sighupio.github.io/gatekeeper-policy-manager
+    targetRevision: 0.10.0
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true
     - ServerSideApply=true
 ---
 apiVersion: argoproj.io/v1alpha1

@@ -1985,7 +1985,7 @@ spec:
           enabled: true
           existingClaim: jenkins-pvc
     repoURL: https://charts.jenkins.io/
-    targetRevision: 5.7.*
+    targetRevision: 5.8.*
   syncPolicy:
     automated:
       prune: true

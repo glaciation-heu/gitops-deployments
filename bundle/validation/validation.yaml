@@ -1690,6 +1690,7 @@ spec:
                 ingress.kubernetes.io/ssl-redirect: "true"
                 nginx.org/redirect-to-https: "true"
                 nginx.org/ssl-services: glaciation-console
+                nginx.org/websocket-services: glaciation-console
               enabled: true
               host: glaciation-tenant-console.validation
               ingressClassName: nginx
@@ -1714,6 +1715,7 @@ spec:
                 ingress.kubernetes.io/ssl-redirect: "true"
                 nginx.org/redirect-to-https: "true"
                 nginx.org/ssl-services: data-wrapping-vault
+                nginx.org/websocket-services: data-wrapping-vault
               enabled: true
               hosts:
               - host: vault.validation
@@ -1761,7 +1763,7 @@ spec:
             pathType: Prefix
           console:
             annotations:
-              nginx.ingress.kubernetes.io/backend-protocol: HTTPS
+              nginx.org/websocket-services: dkg-console
             enabled: true
             host: dkg-tenant-console.validation
             ingressClassName: nginx

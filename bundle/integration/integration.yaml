@@ -2741,8 +2741,8 @@ spec:
           - effect: NoSchedule
             key: node-role.kubernetes.io/control-plane
             operator: Equal
-    repoURL: ghcr.io/nginxinc/charts
-    targetRevision: 1.1.3
+    repoURL: ghcr.io/nginx/charts
+    targetRevision: 2.0.1
   syncPolicy:
     automated:
       prune: true

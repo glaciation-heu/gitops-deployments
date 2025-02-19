@@ -73,14 +73,7 @@ spec:
             enabled: true
             ingressClassName: "nginx"
             annotations:
-            #   # NOTE: To make sure the certificate is trusted by clients we should use
-            #   # something like Let's Encrypt
-            #   cert-manager.io/cluster-issuer: "private-ca-issuer"
-              nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
-            # tls:
-            # - hosts:
-            #   - glaciation-tenant-console.integration
-            #   secretName: minio-tenant-console-ingress
+              nginx.org/websocket-services: dkg-console
             host: dkg-tenant-console.integration
             path: /
             pathType: Prefix

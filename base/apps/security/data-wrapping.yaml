@@ -45,6 +45,7 @@ spec:
                 ingress.kubernetes.io/ssl-redirect: "true"
                 nginx.org/redirect-to-https: "true"
                 nginx.org/ssl-services: "glaciation-console"
+                nginx.org/websocket-services: "glaciation-console"
               tls:
               - hosts:
                 - glaciation-tenant-console.integration
@@ -70,6 +71,7 @@ spec:
                 ingress.kubernetes.io/ssl-redirect: "true"
                 nginx.org/redirect-to-https: "true"
                 nginx.org/ssl-services: "data-wrapping-vault"
+                nginx.org/websocket-services: "data-wrapping-vault"
               tls:
               - hosts:
                 - vault.integration

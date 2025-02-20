@@ -1,0 +1,28 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: swarm-agent
+  namespace: argocd
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+spec:
+  destination:
+    namespace: dkg-engine
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    repoURL: https://glaciation-heu.github.io/swarm-agent/helm-charts/
+    chart: swarm-agent
+    targetRevision: 0.*.*
+    helm:
+      valuesObject:
+        ingressHostName: swarm-agent.integration
+        service:
+          type: ClusterIP
+  syncPolicy:
+    automated:
+     prune: true
+     selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

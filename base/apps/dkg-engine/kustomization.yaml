@@ -12,5 +12,6 @@ resources:
   - nats.nack.yaml
   - nats.nats.yaml
   - nats.stream.yaml
+  - swarm-agent.yaml
   - dkg-tenant.yaml
   - replica-service.yaml

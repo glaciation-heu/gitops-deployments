@@ -67,6 +67,17 @@ spec:
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
+  name: swarm-agent
+  namespace: argocd
+spec:
+  source:
+    helm:
+      valuesObject:
+        ingressHostName: swarm-agent.validation
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
   name: replica-service
   namespace: argocd
 spec:

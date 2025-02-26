@@ -2907,6 +2907,35 @@ kind: Application
 metadata:
   finalizers:
   - resources-finalizer.argocd.argoproj.io
+  name: swarm-agent
+  namespace: argocd
+spec:
+  destination:
+    namespace: dkg-engine
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    chart: swarm-agent
+    helm:
+      valuesObject:
+        ingressHostName: swarm-agent.integration
+        service:
+          type: ClusterIP
+    repoURL: https://glaciation-heu.github.io/swarm-agent/helm-charts/
+    targetRevision: 0.*.*
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true
+    - ServerSideApply=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
   name: trade-off-service
   namespace: argocd
 spec:

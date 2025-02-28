@@ -1973,6 +1973,11 @@ spec:
     chart: jenkins
     helm:
       valuesObject:
+        additionalPlugins:
+        - prometheus:819.v50953a_c560dd
+        - nodejs:1.6.4
+        - junit:1317.v5b_35d792b_06a_
+        - pipeline-rest-api:2.37
         controller:
           JCasC:
             authorizationStrategy: |-

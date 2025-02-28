@@ -21,7 +21,7 @@ spec:
       valuesObject:
         controller:
           admin:
-            user: admin          
+            user: admin
             password: jenkins
           JCasC:
             authorizationStrategy: "loggedInUsersCanDoAnything:\n  allowAnonymousRead: true"
@@ -36,6 +36,9 @@ spec:
           # If defined, PVC must be created manually before volume will be bound
           # -- Provide the name of a PVC
           existingClaim: jenkins-pvc
+        additionalPlugins:
+          - prometheus:819.v50953a_c560dd
+          - nodejs:1.6.4
   syncPolicy:
     automated:
      prune: true

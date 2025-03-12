@@ -1810,6 +1810,33 @@ kind: Application
 metadata:
   finalizers:
   - resources-finalizer.argocd.argoproj.io
+  name: forecast-service
+  namespace: argocd
+spec:
+  destination:
+    namespace: dkg-engine
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    chart: forecast-service
+    helm:
+      valuesObject:
+        ingressHostName: forecast.validation
+    repoURL: https://glaciation-heu.github.io/forecast-service/helm-charts/
+    targetRevision: 0.*.*
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true
+    - ServerSideApply=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
   name: gatekeeper-policy-manager
   namespace: argocd
 spec:

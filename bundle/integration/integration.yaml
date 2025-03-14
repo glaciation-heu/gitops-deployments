@@ -1818,7 +1818,7 @@ spec:
     server: https://kubernetes.default.svc
   project: default
   source:
-    chart: forecast-service
+    chart: server
     helm:
       valuesObject:
         ingressHostName: forecast.validation

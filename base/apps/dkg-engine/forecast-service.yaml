@@ -12,7 +12,7 @@ spec:
   project: default
   source:
     repoURL: https://glaciation-heu.github.io/forecast-service/helm-charts/
-    chart: forecast-service
+    chart: server
     targetRevision: 0.*.*
     helm:
       valuesObject:

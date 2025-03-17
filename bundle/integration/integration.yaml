@@ -1821,7 +1821,7 @@ spec:
     chart: server
     helm:
       valuesObject:
-        ingressHostName: forecast.validation
+        ingressHostName: forecast.integration
     repoURL: https://glaciation-heu.github.io/forecast-service/helm-charts/
     targetRevision: 0.*.*
   syncPolicy:

@@ -12,11 +12,11 @@ spec:
   project: default
   source:
     repoURL: https://glaciation-heu.github.io/forecast-service/helm-charts/
-    chart: server
+    chart: forecast-service
     targetRevision: 0.*.*
     helm:
       valuesObject:
-        ingressHostName: forecast.validation
+        ingressHostName: forecast.integration
   syncPolicy:
     automated:
      prune: true

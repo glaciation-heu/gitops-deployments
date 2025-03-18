@@ -22,6 +22,17 @@ spec:
 ---
 apiVersion: argoproj.io/v1alpha1
 kind: Application
+metadata:
+  name: forecast-service
+  namespace: argocd
+spec:
+  source:
+    helm: 
+      valuesObject: 
+        ingressHostName: forecast.validation
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
 metadata: 
   name: data-storage-service
   namespace: argocd

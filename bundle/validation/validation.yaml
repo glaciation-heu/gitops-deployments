@@ -2991,8 +2991,6 @@ spec:
     helm:
       valuesObject:
         ingressHostName: swarm-agent.validation
-        service:
-          type: ClusterIP
     repoURL: https://glaciation-heu.github.io/swarm-agent/helm-charts/
     targetRevision: 0.*.*
   syncPolicy:

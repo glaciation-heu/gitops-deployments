@@ -4,7 +4,7 @@ metadata:
   name: monitoring-stack
   namespace: argocd
   annotations:
-    argocd.argoproj.io/compare-options: ServerSideDiff=true  
+    argocd.argoproj.io/compare-options: ServerSideDiff=true
   finalizers:
   - resources-finalizer.argocd.argoproj.io
 spec:
@@ -20,7 +20,7 @@ spec:
       valuesObject:
         prometheus:
           server:
-            ingress: 
+            ingress:
               enabled: true
               ingressClassName: nginx
               hosts:
@@ -109,6 +109,11 @@ spec:
               static_configs:
               - targets:
                 - 'jena-fuseki-exporter.dkg-engine.svc.cluster.local'
+            - job_name: 'jenkins'
+              metrics_path: '/prometheus'
+              static_configs:
+              - targets:
+                - 'jenkins.jenkins.svc.cluster.local:8080'
         telegraf:
           enabled: false
           resources:
@@ -126,20 +131,20 @@ spec:
               interval: "5s"
               flush_interval: "5s"
               debug: true
-            outputs:      
+            outputs:
               - influxdb_v2:
                   urls:
                     - "http://monitoring-stack-influxdb2"
                   token: encrypted
                   organization: "influxdata"
-                  bucket: "prometheus"            
+                  bucket: "prometheus"
                   timeout: "30s"
                   metric_batch_size: 50000
                   metric_buffer_limit: 500000
 
         influxdb:
           enabled: false
-        
+
         kubernetes-event-exporter:
           config:
             receivers:

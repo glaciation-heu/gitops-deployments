@@ -17,8 +17,6 @@ spec:
     helm:
       valuesObject:
         ingressHostName: swarm-agent.integration
-        service:
-          type: ClusterIP
   syncPolicy:
     automated:
      prune: true

@@ -1,6 +1,6 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
-metadata: 
+metadata:
   name: monitoring-stack
   namespace: argocd
 spec:
@@ -9,14 +9,14 @@ spec:
       valuesObject:
         prometheus:
           server:
-            ingress: 
+            ingress:
               hosts:
                 - prometheus.validation
-    
+
 ---
 apiVersion: argoproj.io/v1alpha1
 kind: Application
-metadata: 
+metadata:
   name: monitoring-stack
   namespace: argocd
 spec:
@@ -24,7 +24,7 @@ spec:
     helm:
       valuesObject:
         grafana:
-          ingress: 
+          ingress:
             hosts:
               - grafana.validation
         prometheus:
@@ -36,3 +36,12 @@ spec:
               requests:
                 cpu: 1
                 memory: 4Gi
+            global:
+              external-labels:
+                cluster: validation
+          alertmanager:
+            ingress:
+              enabled: true
+              className: nginx
+              hosts:
+                - alertmanager.validation

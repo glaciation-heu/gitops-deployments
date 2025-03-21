@@ -39,9 +39,3 @@ spec:
             global:
               external_labels:
                 cluster: validation
-          alertmanager:
-            ingress:
-              enabled: true
-              className: nginx
-              hosts:
-                - alertmanager.validation

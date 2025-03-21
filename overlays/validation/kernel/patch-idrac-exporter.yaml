@@ -89,3 +89,12 @@ spec:
                 static_configs:
                 - targets:
                   - 'jena-fuseki-exporter.dkg-engine.svc.cluster.local'
+              - job_name: 'jenkins'
+                metrics_path: '/prometheus'
+                static_configs:
+                - targets:
+                  - 'jenkins.jenkins.svc.cluster.local:8080'
+                relabel_configs:
+                - source_labels: [__address__]
+                  target_label: instance
+                  replacement: http://jenkins.validation

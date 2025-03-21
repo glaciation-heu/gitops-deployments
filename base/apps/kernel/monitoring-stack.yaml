@@ -114,6 +114,10 @@ spec:
               static_configs:
               - targets:
                 - 'jenkins.jenkins.svc.cluster.local:8080'
+              relabel_configs:
+              - source_labels: [__address__]
+                target_label: instance
+                replacement: http://jenkins.integration
         telegraf:
           enabled: false
           resources:

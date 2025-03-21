@@ -2565,7 +2565,7 @@ spec:
                 hosts:
                 - alertmanager.integration
             global:
-              external-labels:
+              external_labels:
                 cluster: integration
             ingress:
               enabled: true

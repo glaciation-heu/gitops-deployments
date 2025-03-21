@@ -2558,12 +2558,6 @@ spec:
             \ - source_labels: [__address__]\n    target_label: instance\n    replacement:
             http://jenkins.integration\n"
           server:
-            alertmanager:
-              ingress:
-                className: nginx
-                enabled: true
-                hosts:
-                - alertmanager.integration
             global:
               external_labels:
                 cluster: integration

@@ -2543,7 +2543,11 @@ spec:
               \     target_label: instance\n    - target_label: __address__\n      replacement:
               monitoring-stack-prometheus-snmp-exporter.monitoring.svc.cluster.local:9116
               \ # The SNMP exporter's real hostname:port.      \n- job_name: 'jena-fuseki-exporter'\n
-              \ scrape_interval: 10m\n  static_configs:\n  - targets:\n    - 'jena-fuseki-exporter.dkg-engine.svc.cluster.local'"
+              \ scrape_interval: 10m\n  static_configs:\n  - targets:\n    - 'jena-fuseki-exporter.dkg-engine.svc.cluster.local'\n-
+              job_name: 'jenkins'\n  metrics_path: '/prometheus'\n  static_configs:\n
+              \ - targets:\n    - 'jenkins.jenkins.svc.cluster.local:8080'\n  relabel_configs:\n
+              \ - source_labels: [__address__]\n    target_label: instance\n    replacement:
+              http://jenkins.validation\n"
         influxdb:
           enabled: false
         kepler:
@@ -2560,6 +2564,12 @@ spec:
                 url: http://monitoring-stack-loki:3100/loki/api/v1/push
               name: loki
         prometheus:
+          alertmanager:
+            ingress:
+              className: nginx
+              enabled: true
+              hosts:
+              - alertmanager.validation
           extraScrapeConfigs: "- job_name: 'prometheus-node-exporter'\n  kubernetes_sd_configs:\n
             \   - role: endpoints\n  relabel_configs:\n  - source_labels: [__meta_kubernetes_endpoints_name]\n
             \   regex: '.*prometheus-node-exporter'\n    action: keep\n- job_name:
@@ -2594,8 +2604,13 @@ spec:
             \   regex: 'ray-cluster-kuberay-workergroup-worker'\n- job_name: 'jena-fuseki-exporter'\n
             \ scrape_interval: 10m\n  static_configs:\n  - targets:\n    - 'jena-fuseki-exporter.dkg-engine.svc.cluster.local'\n-
             job_name: 'jenkins'\n  metrics_path: '/prometheus'\n  static_configs:\n
-            \ - targets:\n    - 'jenkins.jenkins.svc.cluster.local:8080'\n"
+            \ - targets:\n    - 'jenkins.jenkins.svc.cluster.local:8080'\n  relabel_configs:\n
+            \ - source_labels: [__address__]\n    target_label: instance\n    replacement:
+            http://jenkins.integration\n"
           server:
+            global:
+              external-labels:
+                cluster: validation
             ingress:
               enabled: true
               hosts:

@@ -17,7 +17,7 @@ spec:
                 cpu: 1
                 memory: 4Gi
             global:
-              external-labels:
+              external_labels:
                 cluster: integration
             alertmanager:
               ingress:

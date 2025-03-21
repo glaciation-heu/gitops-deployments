@@ -2554,8 +2554,19 @@ spec:
             \   regex: 'ray-cluster-kuberay-workergroup-worker'\n- job_name: 'jena-fuseki-exporter'\n
             \ scrape_interval: 10m\n  static_configs:\n  - targets:\n    - 'jena-fuseki-exporter.dkg-engine.svc.cluster.local'\n-
             job_name: 'jenkins'\n  metrics_path: '/prometheus'\n  static_configs:\n
-            \ - targets:\n    - 'jenkins.jenkins.svc.cluster.local:8080'\n"
+            \ - targets:\n    - 'jenkins.jenkins.svc.cluster.local:8080'\n  relabel_configs:\n
+            \ - source_labels: [__address__]\n    target_label: instance\n    replacement:
+            http://jenkins.integration\n"
           server:
+            alertmanager:
+              ingress:
+                className: nginx
+                enabled: true
+                hosts:
+                - alertmanager.integration
+            global:
+              external-labels:
+                cluster: integration
             ingress:
               enabled: true
               hosts:

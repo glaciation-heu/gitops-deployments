@@ -2807,6 +2807,9 @@ spec:
           config:
             entries:
               external-status-address: 10.14.2.5
+              proxy-connect-timeout: 300s
+              proxy-read-timeout: 300s
+              proxy-send-timeout: 300s
           kind: deployment
           nodeSelector:
             master: "true"

@@ -2763,6 +2763,9 @@ spec:
           config:
             entries:
               external-status-address: 10.1.14.160
+              proxy-connect-timeout: 300s
+              proxy-read-timeout: 300s
+              proxy-send-timeout: 300s
           kind: deployment
           nodeSelector:
             master: "true"

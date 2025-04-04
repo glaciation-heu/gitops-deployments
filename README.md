@@ -18,7 +18,7 @@ A reference example of application repository is [glaciation-metadata-service](h
 
 ## How to install a new node
 
-1. Install ArgoCD
+1. Install and configure ArgoCD
    1. Follow official [docs](https://argo-cd.readthedocs.io/en/stable/getting_started/).
    2. Apply `argocd-*.yaml` configmaps of our custom configuration.
       ```

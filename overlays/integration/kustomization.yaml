@@ -3,10 +3,10 @@ kind: Kustomization
 resources:
   - ./base
   - ./kernel
-  # - ./ai-decision-engine
+  - ./ai-decision-engine
   - ./ingresses
-  # - ./semantification
+  - ./semantification
   - ./mef-sog-uc1
-  # - ./dell-uc2
-  # - ./dkg-engine
+  - ./dell-uc2
+  - ./dkg-engine
   - ./security

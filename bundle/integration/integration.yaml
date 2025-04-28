@@ -338,6 +338,204 @@ spec:
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
+  name: kafdrop
+  namespace: argocd
+spec:
+  destination:
+    namespace: kafdrop
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    chart: kafdrop
+    helm:
+      values: |
+        server:
+          servlet:
+            contextPath: /kafdrop
+        service:
+          annotations: {}
+          type: ClusterIP
+          port: 80
+        kafka:
+          brokerConnect: kafka.kafka.svc.cluster.local:9092
+        resources:
+          requests:
+            cpu: 1m
+            memory: 128Mi
+            nvidia.com/gpu: 0
+            ephemeral-storage: 1Mi
+          limits:
+            cpu: 1
+            memory: 1Gi
+            nvidia.com/gpu: 0
+            ephemeral-storage: 10Mi
+        jvm:
+          opts: '-Xms32M -Xmx64M'
+    repoURL: https://glaciation-heu.github.io/mef-sog-uc1/
+    targetRevision: 0.1.0
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true
+    - ServerSideApply=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  annotations:
+    argocd.argoproj.io/compare-options: ServerSideDiff=true,IncludeMutationWebhook=true
+  name: kafka
+  namespace: argocd
+spec:
+  destination:
+    namespace: kafka
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    chart: kafka
+    helm:
+      values: |
+        image:
+          tag: 3.5.1-debian-11-r25
+          pullPolicy: Always
+
+        kraft:
+          enabled: false
+
+        auth:
+          interBrokerProtocol: plaintext
+
+        broker:
+          replicaCount: 3
+          podAntiAffinityPreset: hard
+          persistence:
+            enabled: true
+            storageClass: longhorn
+            accessModes:
+              - ReadWriteOnce
+            size: 2Gi
+          resources:
+            requests:
+              cpu: 1
+              memory: 2Gi
+              nvidia.com/gpu: 0
+              ephemeral-storage: 5Mi
+            limits:
+              cpu: 1
+              memory: 2Gi
+              nvidia.com/gpu: 0
+              ephemeral-storage: 20Mi
+
+        controller:
+          replicaCount: 0
+
+        zookeeper:
+          enabled: true
+          replicaCount: 3
+          podAntiAffinityPreset: hard
+          persistence:
+            enabled: true
+            storageClass: longhorn
+            accessModes:
+              - ReadWriteOnce
+            size: 5Gi
+          resources:
+            requests:
+              cpu: 1
+              memory: 2Gi
+              nvidia.com/gpu: 0
+              ephemeral-storage: 1Mi
+            limits:
+              cpu: 1
+              memory: 2Gi
+              nvidia.com/gpu: 0
+              ephemeral-storage: 5Mi
+
+        listeners:
+          client:
+            protocol: plaintext
+
+          interbroker:
+            protocol: plaintext
+
+          external:
+            protocol: plaintext
+
+        externalAccess:
+          enabled: false
+    repoURL: https://glaciation-heu.github.io/mef-sog-uc1/
+    targetRevision: 28.0.4
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true
+    - ServerSideApply=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: keda
+  namespace: argocd
+spec:
+  destination:
+    namespace: keda
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    chart: keda
+    helm:
+      values: |
+        resources:
+          operator:
+            limits:
+              cpu: 1
+              memory: 1000Mi
+              nvidia.com/gpu: 0
+              ephemeral-storage: 5Mi
+            requests:
+              cpu: 100m
+              memory: 100Mi
+              nvidia.com/gpu: 0
+              ephemeral-storage: 1Mi
+          metricServer:
+            limits:
+              cpu: 1
+              memory: 1000Mi
+              nvidia.com/gpu: 0
+              ephemeral-storage: 5Mi
+            requests:
+              cpu: 100m
+              memory: 100Mi
+              nvidia.com/gpu: 0
+              ephemeral-storage: 1Mi
+          webhooks:
+            limits:
+              cpu: 1
+              memory: 1000Mi
+              nvidia.com/gpu: 0
+              ephemeral-storage: 5Mi
+            requests:
+              cpu: 100m
+              memory: 100Mi
+              nvidia.com/gpu: 0
+              ephemeral-storage: 1Mi
+    repoURL: https://kedacore.github.io/charts
+    targetRevision: 2.14.0
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true
+    - ServerSideApply=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
   annotations:
     argocd.argoproj.io/hook: Sync
     argocd.argoproj.io/sync-wave: "-10"
@@ -356,6 +554,36 @@ spec:
           jobEnabled: false
     repoURL: https://charts.longhorn.io/
     targetRevision: v1.6.4
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true
+    - ServerSideApply=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: mef-sog-uc1-wl
+  namespace: argocd
+spec:
+  destination:
+    namespace: mef-sog-uc1-wl
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    chart: mef-sog-uc1-wl
+    helm:
+      values: |
+        scheduledClient:
+          service:
+            type: ClusterIP
+            port: 80
+        elaborationTimbMs:
+          logLevelJpa: true
+    repoURL: https://glaciation-heu.github.io/mef-sog-uc1/
+    targetRevision: 2.*.*
   syncPolicy:
     automated:
       prune: true

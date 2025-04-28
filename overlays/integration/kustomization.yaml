@@ -4,7 +4,7 @@ resources:
   - ./base
   # - ./kernel
   # - ./ai-decision-engine
-  # - ./ingresses
+  - ./ingresses
   # - ./semantification
   # - ./mef-sog-uc1
   # - ./dell-uc2

@@ -6,7 +6,7 @@ resources:
   # - ./ai-decision-engine
   - ./ingresses
   # - ./semantification
-  # - ./mef-sog-uc1
+  - ./mef-sog-uc1
   # - ./dell-uc2
   # - ./dkg-engine
   # - ./security

@@ -17,6 +17,1076 @@ provisioner: rancher.io/local-path
 reclaimPolicy: Delete
 volumeBindingMode: WaitForFirstConsumer
 ---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: accounts.jetstream.nats.io
+spec:
+  group: jetstream.nats.io
+  names:
+    kind: Account
+    plural: accounts
+    singular: account
+  scope: Namespaced
+  versions:
+  - name: v1beta2
+    schema:
+      openAPIV3Schema:
+        properties:
+          spec:
+            properties:
+              creds:
+                description: The creds to be used to connect to the NATS Service.
+                properties:
+                  file:
+                    description: Credentials file, generated with github.com/nats-io/nsc
+                      tool.
+                    type: string
+                  secret:
+                    properties:
+                      name:
+                        description: Name of the secret with the creds.
+                        type: string
+                    type: object
+                type: object
+              name:
+                description: A unique name for the Account.
+                minLength: 1
+                pattern: ^[^.*>]*$
+                type: string
+              servers:
+                description: A list of servers to connect.
+                items:
+                  minLength: 1
+                  type: string
+                minLength: 1
+                type: array
+              tls:
+                description: The TLS certs to be used to connect to the NATS Service.
+                properties:
+                  ca:
+                    description: Filename of the Root CA of the TLS cert.
+                    type: string
+                  cert:
+                    description: Filename of the TLS cert.
+                    type: string
+                  key:
+                    description: Filename of the TLS cert key.
+                    type: string
+                  secret:
+                    properties:
+                      name:
+                        description: Name of the TLS secret with the certs.
+                        type: string
+                    type: object
+                type: object
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: consumers.jetstream.nats.io
+spec:
+  group: jetstream.nats.io
+  names:
+    kind: Consumer
+    plural: consumers
+    singular: consumer
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - description: The current state of the consumer.
+      jsonPath: .status.conditions[?(@.type == 'Ready')].reason
+      name: State
+      type: string
+    - description: The name of the Jetstream Stream.
+      jsonPath: .spec.streamName
+      name: Stream
+      type: string
+    - description: The name of the Jetstream Consumer.
+      jsonPath: .spec.durableName
+      name: Consumer
+      type: string
+    - description: The ack policy.
+      jsonPath: .spec.ackPolicy
+      name: Ack Policy
+      type: string
+    name: v1beta2
+    schema:
+      openAPIV3Schema:
+        properties:
+          spec:
+            properties:
+              account:
+                description: Name of the account to which the Consumer belongs.
+                pattern: ^[^.*>]*$
+                type: string
+              ackPolicy:
+                default: none
+                description: How messages should be acknowledged.
+                enum:
+                - none
+                - all
+                - explicit
+                type: string
+              ackWait:
+                default: 1ns
+                description: How long to allow messages to remain un-acknowledged
+                  before attempting redelivery.
+                type: string
+              backoff:
+                description: List of durations representing a retry time scale for
+                  NaK'd or retried messages
+                items:
+                  type: string
+                type: array
+              creds:
+                default: ""
+                description: NATS user credentials for connecting to servers. Please
+                  make sure your controller has mounted the cerds on its path.
+                type: string
+              deliverGroup:
+                description: The name of a queue group.
+                type: string
+              deliverPolicy:
+                default: all
+                enum:
+                - all
+                - last
+                - new
+                - byStartSequence
+                - byStartTime
+                type: string
+              deliverSubject:
+                description: The subject to deliver observed messages, when not set,
+                  a pull-based Consumer is created.
+                type: string
+              description:
+                description: The description of the consumer.
+                type: string
+              durableName:
+                description: The name of the Consumer.
+                minLength: 1
+                pattern: ^[^.*>]+$
+                type: string
+              filterSubject:
+                description: Select only a specific incoming subjects, supports wildcards.
+                type: string
+              filterSubjects:
+                description: List of incoming subjects, supports wildcards. Available
+                  since 2.10.
+                items:
+                  type: string
+                type: array
+              flowControl:
+                default: false
+                description: Enables flow control.
+                type: boolean
+              headersOnly:
+                default: false
+                description: When set, only the headers of messages in the stream
+                  are delivered, and not the bodies. Additionally, Nats-Msg-Size header
+                  is added to indicate the size of the removed payload
+                type: boolean
+              heartbeatInterval:
+                description: The interval used to deliver idle heartbeats for push-based
+                  consumers, in Go's time.Duration format.
+                type: string
+              maxAckPending:
+                description: Maximum pending Acks before consumers are paused.
+                type: integer
+              maxDeliver:
+                minimum: -1
+                type: integer
+              maxRequestBatch:
+                description: The largest batch property that may be specified when
+                  doing a pull on a Pull Consumer.
+                type: integer
+              maxRequestExpires:
+                description: The maximum expires duration that may be set when doing
+                  a pull on a Pull Consumer.
+                type: string
+              maxRequestMaxBytes:
+                description: The maximum max_bytes value that maybe set when dong
+                  a pull on a Pull Consumer.
+                type: integer
+              maxWaiting:
+                description: The number of pulls that can be outstanding on a pull
+                  consumer, pulls received after this is reached are ignored.
+                type: integer
+              memStorage:
+                default: false
+                description: Force the consumer state to be kept in memory rather
+                  than inherit the setting from the stream.
+                type: boolean
+              metadata:
+                additionalProperties:
+                  type: string
+                description: Additional Consumer metadata.
+                type: object
+              nkey:
+                default: ""
+                description: NATS user NKey for connecting to servers.
+                type: string
+              optStartSeq:
+                minimum: 0
+                type: integer
+              optStartTime:
+                description: Time format must be RFC3339.
+                type: string
+              preventDelete:
+                default: false
+                description: When true, the managed Consumer will not be deleted when
+                  the resource is deleted
+                type: boolean
+              preventUpdate:
+                default: false
+                description: When true, the managed Consumer will not be updated when
+                  the resource is updated
+                type: boolean
+              rateLimitBps:
+                description: rate at which messages will be delivered to clients,
+                  expressed in bit per second.
+                type: integer
+              replayPolicy:
+                default: instant
+                description: How messages are sent.
+                enum:
+                - instant
+                - original
+                type: string
+              replicas:
+                description: When set do not inherit the replica count from the stream
+                  but specifically set it to this amount.
+                type: integer
+              sampleFreq:
+                description: What percentage of acknowledgements should be samples
+                  for observability.
+                type: string
+              servers:
+                default: []
+                description: A list of servers for creating consumer
+                items:
+                  type: string
+                type: array
+              streamName:
+                description: The name of the Stream to create the Consumer in.
+                type: string
+              tls:
+                description: A client's TLS certs and keys.
+                properties:
+                  clientCert:
+                    description: A client's cert filepath. Should be mounted.
+                    type: string
+                  clientKey:
+                    description: A client's key filepath. Should be mounted.
+                    type: string
+                  rootCas:
+                    description: A list of filepaths to CAs. Should be mounted.
+                    items:
+                      type: string
+                    type: array
+                type: object
+            type: object
+          status:
+            properties:
+              conditions:
+                items:
+                  properties:
+                    lastTransitionTime:
+                      type: string
+                    message:
+                      type: string
+                    reason:
+                      type: string
+                    status:
+                      type: string
+                    type:
+                      type: string
+                  type: object
+                type: array
+              observedGeneration:
+                type: integer
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
+  - additionalPrinterColumns:
+    - description: The current state of the consumer.
+      jsonPath: .status.conditions[?(@.type == 'Ready')].reason
+      name: State
+      type: string
+    - description: The name of the Jetstream Stream.
+      jsonPath: .spec.streamName
+      name: Stream
+      type: string
+    - description: The name of the Jetstream Consumer.
+      jsonPath: .spec.durableName
+      name: Consumer
+      type: string
+    - description: The ack policy.
+      jsonPath: .spec.ackPolicy
+      name: Ack Policy
+      type: string
+    name: v1beta1
+    schema:
+      openAPIV3Schema:
+        properties:
+          spec:
+            properties:
+              ackPolicy:
+                default: none
+                description: How messages should be acknowledged.
+                enum:
+                - none
+                - all
+                - explicit
+                type: string
+              ackWait:
+                default: 1ns
+                description: How long to allow messages to remain un-acknowledged
+                  before attempting redelivery.
+                type: string
+              deliverGroup:
+                description: The name of a queue group.
+                type: string
+              deliverPolicy:
+                default: all
+                enum:
+                - all
+                - last
+                - new
+                - byStartSequence
+                - byStartTime
+                type: string
+              deliverSubject:
+                description: The subject to deliver observed messages, when not set,
+                  a pull-based Consumer is created.
+                type: string
+              description:
+                description: The description of the consumer.
+                type: string
+              durableName:
+                description: The name of the Consumer.
+                minLength: 1
+                pattern: ^[^.*>]+$
+                type: string
+              filterSubject:
+                description: Select only a specific incoming subjects, supports wildcards.
+                type: string
+              flowControl:
+                default: false
+                description: Enables flow control.
+                type: boolean
+              heartbeatInterval:
+                description: The interval used to deliver idle heartbeats for push-based
+                  consumers, in Go's time.Duration format.
+                type: string
+              maxAckPending:
+                description: Maximum pending Acks before consumers are paused.
+                type: integer
+              maxDeliver:
+                minimum: -1
+                type: integer
+              optStartSeq:
+                minimum: 0
+                type: integer
+              optStartTime:
+                description: Time format must be RFC3339.
+                type: string
+              rateLimitBps:
+                description: rate at which messages will be delivered to clients,
+                  expressed in bit per second.
+                type: integer
+              replayPolicy:
+                default: instant
+                description: How messages are sent.
+                enum:
+                - instant
+                - original
+                type: string
+              sampleFreq:
+                description: What percentage of acknowledgements should be samples
+                  for observability.
+                type: string
+              streamName:
+                description: The name of the Stream to create the Consumer in.
+                type: string
+            type: object
+          status:
+            properties:
+              conditions:
+                items:
+                  properties:
+                    lastTransitionTime:
+                      type: string
+                    message:
+                      type: string
+                    reason:
+                      type: string
+                    status:
+                      type: string
+                    type:
+                      type: string
+                  type: object
+                type: array
+              observedGeneration:
+                type: integer
+            type: object
+        type: object
+    served: false
+    storage: false
+    subresources:
+      status: {}
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: streams.jetstream.nats.io
+spec:
+  group: jetstream.nats.io
+  names:
+    kind: Stream
+    plural: streams
+    singular: stream
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - description: The current state of the stream.
+      jsonPath: .status.conditions[?(@.type == 'Ready')].reason
+      name: State
+      type: string
+    - description: The name of the Jetstream Stream.
+      jsonPath: .spec.name
+      name: Stream Name
+      type: string
+    - description: The subjects this Stream produces.
+      jsonPath: .spec.subjects
+      name: Subjects
+      type: string
+    name: v1beta2
+    schema:
+      openAPIV3Schema:
+        properties:
+          spec:
+            properties:
+              account:
+                description: Name of the account to which the Stream belongs.
+                pattern: ^[^.*>]*$
+                type: string
+              allowDirect:
+                default: false
+                description: When true, allow higher performance, direct access to
+                  get individual messages
+                type: boolean
+              allowRollup:
+                default: false
+                description: When true, allows the use of the Nats-Rollup header to
+                  replace all contents of a stream, or subject in a stream, with a
+                  single new message.
+                type: boolean
+              compression:
+                default: ""
+                description: Stream specific compression.
+                enum:
+                - s2
+                - none
+                - ""
+                type: string
+              creds:
+                default: ""
+                description: NATS user credentials for connecting to servers. Please
+                  make sure your controller has mounted the cerds on its path.
+                type: string
+              denyDelete:
+                default: false
+                description: When true, restricts the ability to delete messages from
+                  a stream via the API. Cannot be changed once set to true.
+                type: boolean
+              denyPurge:
+                default: false
+                description: When true, restricts the ability to purge a stream via
+                  the API. Cannot be changed once set to true.
+                type: boolean
+              description:
+                description: The description of the stream.
+                type: string
+              discard:
+                default: old
+                description: When a Stream reach it's limits either old messages are
+                  deleted or new ones are denied.
+                enum:
+                - old
+                - new
+                type: string
+              discardPerSubject:
+                default: false
+                description: Allows to discard messages on a subject basis.
+                type: boolean
+              duplicateWindow:
+                description: The duration window to track duplicate messages for.
+                type: string
+              firstSequence:
+                default: 0
+                description: Sequence number from which the Stream will start.
+                type: number
+              maxAge:
+                default: ""
+                description: Maximum age of any message in the stream, expressed in
+                  Go's time.Duration format. Empty for unlimited.
+                type: string
+              maxBytes:
+                default: -1
+                description: How big the Stream may be, when the combined stream size
+                  exceeds this old messages are removed. -1 for unlimited.
+                minimum: -1
+                type: integer
+              maxConsumers:
+                default: -1
+                description: How many Consumers can be defined for a given Stream.
+                  -1 for unlimited.
+                minimum: -1
+                type: integer
+              maxMsgSize:
+                default: -1
+                description: The largest message that will be accepted by the Stream.
+                  -1 for unlimited.
+                minimum: -1
+                type: integer
+              maxMsgs:
+                default: -1
+                description: How many messages may be in a Stream, oldest messages
+                  will be removed if the Stream exceeds this size. -1 for unlimited.
+                minimum: -1
+                type: integer
+              maxMsgsPerSubject:
+                default: 0
+                description: The maximum of messages per subject.
+                type: integer
+              metadata:
+                additionalProperties:
+                  type: string
+                description: Additional Stream metadata.
+                type: object
+              mirror:
+                description: A stream mirror.
+                properties:
+                  externalApiPrefix:
+                    type: string
+                  externalDeliverPrefix:
+                    type: string
+                  filterSubject:
+                    type: string
+                  name:
+                    type: string
+                  optStartSeq:
+                    type: integer
+                  optStartTime:
+                    description: Time format must be RFC3339.
+                    type: string
+                  subjectTransforms:
+                    description: List of subject transforms for this mirror.
+                    items:
+                      description: A subject transform pair.
+                      properties:
+                        dest:
+                          description: Destination subject.
+                          type: string
+                        source:
+                          description: Source subject.
+                          type: string
+                      type: object
+                    type: array
+                type: object
+              name:
+                description: A unique name for the Stream.
+                minLength: 1
+                pattern: ^[^.*>]*$
+                type: string
+              nkey:
+                default: ""
+                description: NATS user NKey for connecting to servers.
+                type: string
+              noAck:
+                default: false
+                description: Disables acknowledging messages that are received by
+                  the Stream.
+                type: boolean
+              placement:
+                description: A stream's placement.
+                properties:
+                  cluster:
+                    type: string
+                  tags:
+                    items:
+                      type: string
+                    type: array
+                type: object
+              preventDelete:
+                default: false
+                description: When true, the managed Stream will not be deleted when
+                  the resource is deleted
+                type: boolean
+              preventUpdate:
+                default: false
+                description: When true, the managed Stream will not be updated when
+                  the resource is updated
+                type: boolean
+              replicas:
+                default: 1
+                description: How many replicas to keep for each message.
+                minimum: 1
+                type: integer
+              republish:
+                description: Republish configuration of the stream.
+                properties:
+                  destination:
+                    description: Messages will be additionally published to that subject.
+                    type: string
+                  source:
+                    description: Messages will be published from that subject to the
+                      destination subject.
+                    type: string
+                type: object
+              retention:
+                default: limits
+                description: How messages are retained in the Stream, once this is
+                  exceeded old messages are removed.
+                enum:
+                - limits
+                - interest
+                - workqueue
+                type: string
+              servers:
+                default: []
+                description: A list of servers for creating stream
+                items:
+                  type: string
+                type: array
+              sources:
+                description: A stream's sources.
+                items:
+                  properties:
+                    externalApiPrefix:
+                      type: string
+                    externalDeliverPrefix:
+                      type: string
+                    filterSubject:
+                      type: string
+                    name:
+                      type: string
+                    optStartSeq:
+                      type: integer
+                    optStartTime:
+                      description: Time format must be RFC3339.
+                      type: string
+                    subjectTransforms:
+                      description: List of subject transforms for this mirror.
+                      items:
+                        description: A subject transform pair.
+                        properties:
+                          dest:
+                            description: Destination subject.
+                            type: string
+                          source:
+                            description: Source subject.
+                            type: string
+                        type: object
+                      type: array
+                  type: object
+                type: array
+              storage:
+                default: memory
+                description: The storage backend to use for the Stream.
+                enum:
+                - file
+                - memory
+                type: string
+              subjectTransform:
+                description: SubjectTransform is for applying a subject transform
+                  (to matching messages) when a new message is received
+                properties:
+                  dest:
+                    description: Destination subject to transform into
+                    type: string
+                  source:
+                    description: Source subject
+                    type: string
+                type: object
+              subjects:
+                description: A list of subjects to consume, supports wildcards.
+                items:
+                  minLength: 1
+                  type: string
+                minLength: 1
+                type: array
+              tls:
+                description: A client's TLS certs and keys.
+                properties:
+                  clientCert:
+                    description: A client's cert filepath. Should be mounted.
+                    type: string
+                  clientKey:
+                    description: A client's key filepath. Should be mounted.
+                    type: string
+                  rootCas:
+                    description: A list of filepaths to CAs. Should be mounted.
+                    items:
+                      type: string
+                    type: array
+                type: object
+            type: object
+          status:
+            properties:
+              conditions:
+                items:
+                  properties:
+                    lastTransitionTime:
+                      type: string
+                    message:
+                      type: string
+                    reason:
+                      type: string
+                    status:
+                      type: string
+                    type:
+                      type: string
+                  type: object
+                type: array
+              observedGeneration:
+                type: integer
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
+  - additionalPrinterColumns:
+    - description: The current state of the stream.
+      jsonPath: .status.conditions[?(@.type == 'Ready')].reason
+      name: State
+      type: string
+    - description: The name of the Jetstream Stream.
+      jsonPath: .spec.name
+      name: Stream Name
+      type: string
+    - description: The subjects this Stream produces.
+      jsonPath: .spec.subjects
+      name: Subjects
+      type: string
+    name: v1beta1
+    schema:
+      openAPIV3Schema:
+        properties:
+          spec:
+            properties:
+              description:
+                description: The description of the stream.
+                type: string
+              discard:
+                default: old
+                description: When a Stream reach it's limits either old messages are
+                  deleted or new ones are denied.
+                enum:
+                - old
+                - new
+                type: string
+              duplicateWindow:
+                description: The duration window to track duplicate messages for.
+                type: string
+              maxAge:
+                default: ""
+                description: Maximum age of any message in the stream, expressed in
+                  Go's time.Duration format. Empty for unlimited.
+                type: string
+              maxBytes:
+                default: -1
+                description: How big the Stream may be, when the combined stream size
+                  exceeds this old messages are removed. -1 for unlimited.
+                minimum: -1
+                type: integer
+              maxConsumers:
+                default: -1
+                description: How many Consumers can be defined for a given Stream.
+                  -1 for unlimited.
+                minimum: -1
+                type: integer
+              maxMsgSize:
+                default: -1
+                description: The largest message that will be accepted by the Stream.
+                  -1 for unlimited.
+                minimum: -1
+                type: integer
+              maxMsgs:
+                default: -1
+                description: How many messages may be in a Stream, oldest messages
+                  will be removed if the Stream exceeds this size. -1 for unlimited.
+                minimum: -1
+                type: integer
+              maxMsgsPerSubject:
+                default: 0
+                description: The maximum of messages per subject.
+                type: integer
+              mirror:
+                description: A stream mirror.
+                properties:
+                  externalApiPrefix:
+                    type: string
+                  externalDeliverPrefix:
+                    type: string
+                  filterSubject:
+                    type: string
+                  name:
+                    type: string
+                  optStartSeq:
+                    type: integer
+                  optStartTime:
+                    description: Time format must be RFC3339.
+                    type: string
+                type: object
+              name:
+                description: A unique name for the Stream.
+                minLength: 1
+                pattern: ^[^.*>]*$
+                type: string
+              noAck:
+                default: false
+                description: Disables acknowledging messages that are received by
+                  the Stream.
+                type: boolean
+              placement:
+                description: A stream's placement.
+                properties:
+                  cluster:
+                    type: string
+                  tags:
+                    items:
+                      type: string
+                    type: array
+                type: object
+              replicas:
+                default: 1
+                description: How many replicas to keep for each message.
+                minimum: 1
+                type: integer
+              retention:
+                default: limits
+                description: How messages are retained in the Stream, once this is
+                  exceeded old messages are removed.
+                enum:
+                - limits
+                - interest
+                - workqueue
+                type: string
+              sources:
+                description: A stream's sources.
+                items:
+                  properties:
+                    externalApiPrefix:
+                      type: string
+                    externalDeliverPrefix:
+                      type: string
+                    filterSubject:
+                      type: string
+                    name:
+                      type: string
+                    optStartSeq:
+                      type: integer
+                    optStartTime:
+                      description: Time format must be RFC3339.
+                      type: string
+                  type: object
+                type: array
+              storage:
+                default: memory
+                description: The storage backend to use for the Stream.
+                enum:
+                - file
+                - memory
+                type: string
+              subjects:
+                description: A list of subjects to consume, supports wildcards.
+                items:
+                  minLength: 1
+                  type: string
+                minLength: 1
+                type: array
+            type: object
+          status:
+            properties:
+              conditions:
+                items:
+                  properties:
+                    lastTransitionTime:
+                      type: string
+                    message:
+                      type: string
+                    reason:
+                      type: string
+                    status:
+                      type: string
+                    type:
+                      type: string
+                  type: object
+                type: array
+              observedGeneration:
+                type: integer
+            type: object
+        type: object
+    served: false
+    storage: false
+    subresources:
+      status: {}
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: streamtemplates.jetstream.nats.io
+spec:
+  group: jetstream.nats.io
+  names:
+    kind: StreamTemplate
+    plural: streamtemplates
+    singular: streamtemplate
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - description: The current state of the stream.
+      jsonPath: .status.conditions[?(@.type == 'Ready')].reason
+      name: State
+      type: string
+    - description: The name of the Jetstream Stream Template.
+      jsonPath: .spec.name
+      name: Stream Template Name
+      type: string
+    - description: The subjects this Stream produces.
+      jsonPath: .spec.subjects
+      name: Subjects
+      type: string
+    name: v1beta1
+    schema:
+      openAPIV3Schema:
+        properties:
+          spec:
+            properties:
+              discard:
+                default: old
+                description: When a Stream reach it's limits either old messages are
+                  deleted or new ones are denied.
+                enum:
+                - old
+                - new
+                type: string
+              duplicateWindow:
+                description: The duration window to track duplicate messages for.
+                type: string
+              maxAge:
+                default: ""
+                description: Maximum age of any message in the stream, expressed in
+                  Go's time.Duration format. Empty for unlimited.
+                type: string
+              maxBytes:
+                default: -1
+                description: How big the Stream may be, when the combined stream size
+                  exceeds this old messages are removed. -1 for unlimited.
+                minimum: -1
+                type: integer
+              maxConsumers:
+                default: -1
+                description: How many Consumers can be defined for a given Stream.
+                  -1 for unlimited.
+                minimum: -1
+                type: integer
+              maxMsgSize:
+                default: -1
+                description: The largest message that will be accepted by the Stream.
+                  -1 for unlimited.
+                minimum: -1
+                type: integer
+              maxMsgs:
+                default: -1
+                description: How many messages may be in a Stream, oldest messages
+                  will be removed if the Stream exceeds this size. -1 for unlimited.
+                minimum: -1
+                type: integer
+              maxStreams:
+                default: -1
+                description: The maximum number of Streams this Template can create,
+                  -1 for unlimited.
+                minimum: -1
+                type: integer
+              name:
+                description: A unique name for the Stream Template.
+                minLength: 1
+                pattern: ^[^.*>]*$
+                type: string
+              noAck:
+                default: false
+                description: Disables acknowledging messages that are received by
+                  the Stream.
+                type: boolean
+              replicas:
+                default: 1
+                description: How many replicas to keep for each message.
+                minimum: 1
+                type: integer
+              retention:
+                default: limits
+                description: How messages are retained in the Stream, once this is
+                  exceeded old messages are removed.
+                enum:
+                - limits
+                - interest
+                - workqueue
+                type: string
+              storage:
+                default: memory
+                description: The storage backend to use for the Stream.
+                enum:
+                - file
+                - memory
+                type: string
+              subjects:
+                description: A list of subjects to consume, supports wildcards.
+                items:
+                  minLength: 1
+                  type: string
+                minLength: 1
+                type: array
+            type: object
+          status:
+            properties:
+              conditions:
+                items:
+                  properties:
+                    lastTransitionTime:
+                      type: string
+                    message:
+                      type: string
+                    reason:
+                      type: string
+                    status:
+                      type: string
+                    type:
+                      type: string
+                  type: object
+                type: array
+              observedGeneration:
+                type: integer
+            type: object
+        type: object
+    served: false
+    storage: true
+    subresources:
+      status: {}
+---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -527,6 +1597,60 @@ spec:
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+  name: data-storage-service
+  namespace: argocd
+spec:
+  destination:
+    namespace: dkg-engine
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    chart: data-storage-service
+    helm:
+      valuesObject:
+        ingressHostName: data-storage.integration
+    repoURL: https://glaciation-heu.github.io/glaciation-data-storage-service/helm-charts/
+    targetRevision: 0.*.*
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true
+    - ServerSideApply=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+  name: data-storage-service-db
+  namespace: argocd
+spec:
+  destination:
+    namespace: dkg-engine
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    chart: data-storage-service-DB
+    helm:
+      valuesObject:
+        ingressHostName: dss-db.integration
+    repoURL: https://glaciation-heu.github.io/glaciation-dssdb/helm-charts/
+    targetRevision: 0.*.*
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true
+    - ServerSideApply=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
   annotations:
     argocd.argoproj.io/compare-options: ServerSideDiff=true
     argocd.argoproj.io/sync-wave: "-10"
@@ -613,6 +1737,104 @@ spec:
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
+  annotations:
+    argocd.argoproj.io/compare-options: ServerSideDiff=true
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+  name: dkg-tenant
+  namespace: argocd
+spec:
+  destination:
+    namespace: dkg-engine
+    server: https://kubernetes.default.svc
+  project: default
+  sources:
+  - chart: tenant
+    helm:
+      valuesObject:
+        ingress:
+          api:
+            annotations:
+              nginx.ingress.kubernetes.io/backend-protocol: HTTPS
+            enabled: true
+            host: dkg-tenant.integration
+            ingressClassName: nginx
+            path: /
+            pathType: Prefix
+          console:
+            annotations:
+              nginx.org/websocket-services: dkg-console
+            enabled: true
+            host: dkg-tenant-console.integration
+            ingressClassName: nginx
+            path: /
+            pathType: Prefix
+        secrets:
+          accessKey: minio
+          name: dkg-env-configuration
+          secretKey: minio123
+        tenant:
+          buckets:
+          - name: one
+          - name: two
+          - name: three
+          certificate:
+            requestAutoCert: false
+          configuration:
+            name: dkg-env-configuration
+          name: dkg
+          pools:
+          - name: dkg-pool
+            resources:
+              limits:
+                cpu: 2
+                memory: 4Gi
+              requests:
+                cpu: 1
+                memory: 2Gi
+            servers: 2
+            size: 1Gi
+            storageClassName: local-path
+            volumesPerServer: 2
+    repoURL: https://operator.min.io
+    targetRevision: 5.0.14
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - ServerSideApply=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+  name: forecast-service
+  namespace: argocd
+spec:
+  destination:
+    namespace: dkg-engine
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    chart: forecast-service
+    helm:
+      valuesObject:
+        ingressHostName: forecast.integration
+    repoURL: https://glaciation-heu.github.io/forecast-service/helm-charts/
+    targetRevision: 0.*.*
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true
+    - ServerSideApply=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
   finalizers:
   - resources-finalizer.argocd.argoproj.io
   name: gatekeeper-policy-manager
@@ -644,6 +1866,38 @@ spec:
             secretName: gpm-ingress
     repoURL: https://sighupio.github.io/gatekeeper-policy-manager
     targetRevision: 0.10.0
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true
+    - ServerSideApply=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+  name: idmg-decision-engine
+  namespace: argocd
+spec:
+  destination:
+    namespace: idmg
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    chart: cf
+    helm:
+      valuesObject:
+        ingress:
+          hosts:
+            dataGenerator: data-generator.integration
+            databaseController: database-controller.integration
+            model: model.integration
+            plugin: plugin.integration
+    repoURL: https://idmg-pub.gitlab.io/helm-charts/
+    targetRevision: 0.*.*
   syncPolicy:
     automated:
       prune: true
@@ -975,6 +2229,129 @@ spec:
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+  name: kg-exporter
+  namespace: argocd
+spec:
+  destination:
+    namespace: dkg-engine
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    chart: kg-exporter
+    helm:
+      valuesObject:
+        ingressHostName: kg-exporter.integration
+        livenessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /
+            port: 8080
+            scheme: HTTP
+          initialDelaySeconds: 15
+          periodSeconds: 10
+          timeoutSeconds: 5
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 8080
+            scheme: HTTP
+          initialDelaySeconds: 15
+          periodSeconds: 10
+          timeoutSeconds: 5
+        settings:
+          builder:
+            builder_tick_seconds: 60
+            is_single_slice: true
+            node_port: 80
+            queries:
+              node_queries:
+              - measurement_id: Energy.Usage
+                property: Energy.Usage
+                query: |
+                  label_replace(
+                    irate(kepler_node_platform_joules_total[1m] @{{now}}),
+                    "resource",
+                    "$1",
+                    "exported_instance",
+                    "(.+)"
+                  )
+                result_parser: PROMETHEUS_PARSER
+                source: Kepler
+                unit: milliwatts
+              - aggregation:
+                  function: average
+                  period_seconds: 60
+                measurement_id: Available
+                property: CPU.Available
+                query: |
+                  label_replace(
+                    sum(
+                      rate(
+                        node_cpu_seconds_total{mode="idle", service="monitoring-stack-prometheus-node-exporter"}[1m] @{{now}}
+                      )
+                    ) by (node),
+                    "resource",
+                    "$1",
+                    "node",
+                    "(.+)"
+                  )
+                result_parser: PROMETHEUS_PARSER
+                source: NodeExporter
+                subresource: CPU
+                unit: Core
+              - measurement_id: Available
+                property: RAM.Available
+                query: |
+                  label_replace(
+                    node_memory_MemFree_bytes{service="monitoring-stack-prometheus-node-exporter"} @{{now}},
+                    "resource",
+                    "$1",
+                    "node",
+                    "(.+)"
+                  )
+                result_parser: PROMETHEUS_PARSER
+                source: NodeExporter
+                subresource: RAM
+                unit: bytes
+              - measurement_id: Available
+                property: Storage.Available
+                query: |
+                  label_replace(
+                    ephemeral_storage_node_available @{{now}},
+                    "resource",
+                    "$1",
+                    "node_name",
+                    "(.+)"
+                  )
+                result_parser: PROMETHEUS_PARSER
+                source: k8s-ephemeral-storage-metrics
+                subresource: Storage
+                unit: bytes
+              pod_queries: []
+            single_slice_url: http://metadata-service:80
+          k8s:
+            in_cluster: true
+          metadata:
+            metadata_service_url: metadata-service
+          prometheus:
+            endpoint_port: 8080
+          prometheus_client:
+            url: http://monitoring-stack-prometheus-server.monitoring
+    repoURL: https://glaciation-heu.github.io/kg_exporter/helm-charts/
+    targetRevision: 0.*.*
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true
+    - ServerSideApply=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
   annotations:
     argocd.argoproj.io/hook: Sync
     argocd.argoproj.io/sync-wave: "-10"
@@ -1023,6 +2400,33 @@ spec:
           logLevelJpa: true
     repoURL: https://glaciation-heu.github.io/mef-sog-uc1/
     targetRevision: 2.*.*
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true
+    - ServerSideApply=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+  name: metadata-service
+  namespace: argocd
+spec:
+  destination:
+    namespace: dkg-engine
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    chart: metadata-service
+    helm:
+      valuesObject:
+        ingressHostName: metadata.integration
+    repoURL: https://glaciation-heu.github.io/glaciation-metadata-service/helm-charts/
+    targetRevision: 1.*.*
   syncPolicy:
     automated:
       prune: true
@@ -1208,6 +2612,137 @@ spec:
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+  name: nats-jetstream
+  namespace: argocd
+spec:
+  destination:
+    namespace: dkg-engine
+    server: https://kubernetes.default.svc
+  ignoreDifferences:
+  - group: apps
+    jqPathExpressions:
+    - .spec.volumeClaimTemplates[]?
+    kind: StatefulSet
+  project: default
+  source:
+    chart: nats
+    helm:
+      valuesObject:
+        config:
+          cluster:
+            enabled: true
+            replicas: 3
+          jetstream:
+            enabled: true
+            fileStore:
+              dir: /data
+              enabled: true
+              pvc:
+                enabled: true
+                size: 2Gi
+                storageClassName: longhorn
+            memoryStore:
+              enabled: false
+              maxSize: 1Gi
+          mqtt:
+            enabled: true
+          serverNamePrefix: integration
+          websocket:
+            allowedOrigins: []
+            enabled: true
+            ingress:
+              className: nginx
+              hosts:
+              - nats-websocket.integration
+              path: /
+              pathType: Prefix
+            noTLS: true
+            port: 8080
+            sameOrigin: false
+    repoURL: https://nats-io.github.io/k8s/helm/charts
+    targetRevision: 1.2.6
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true
+    - ServerSideApply=true
+    - RespectIgnoreDifferences=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+  name: nats-nack
+  namespace: argocd
+spec:
+  destination:
+    namespace: dkg-engine
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    chart: nack
+    helm:
+      valuesObject:
+        jetstream:
+          nats:
+            url: nats://nats-jetstream:4222
+    repoURL: https://nats-io.github.io/k8s/helm/charts
+    targetRevision: 0.27.0
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true
+    - ServerSideApply=true
+    - RespectIgnoreDifferences=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  annotations:
+    argocd.argoproj.io/compare-options: ServerSideDiff=true,IncludeMutationWebhook=true
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+  name: neo4j
+  namespace: argocd
+spec:
+  destination:
+    namespace: idmg
+    server: https://kubernetes.default.svc
+  project: default
+  sources:
+  - chart: neo4j
+    helm:
+      valuesObject:
+        neo4j:
+          name: idmg
+          password: password
+        services:
+          neo4j:
+            spec:
+              type: ClusterIP
+        volumes:
+          data:
+            mode: defaultStorageClass
+    repoURL: https://neo4j.github.io/helm-charts/
+    targetRevision: 5.21.2
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true
+    - ServerSideApply=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
   annotations:
     argocd.argoproj.io/hook: Sync
     argocd.argoproj.io/sync-wave: "-10"
@@ -1288,6 +2823,336 @@ spec:
     syncOptions:
     - CreateNamespace=true
     - ServerSideApply=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+  name: prediction-service
+  namespace: argocd
+spec:
+  destination:
+    namespace: dkg-engine
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    chart: prediction-service
+    helm:
+      valuesObject:
+        ingressHostName: prediction.integration
+    repoURL: https://glaciation-heu.github.io/glaciation-prediction-service/helm-charts/
+    targetRevision: 0.*.*
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true
+    - ServerSideApply=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+  name: replica-service
+  namespace: argocd
+spec:
+  destination:
+    namespace: dkg-engine
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    chart: rhio
+    helm:
+      valuesObject:
+        configuration:
+          nats:
+            endpoint: nats-jetstream.dkg-engine.svc.cluster.local:4222
+          nodes:
+          - endpoints:
+            - 10.14.2.5:31100
+            public_key: b2030d8df6c0a8bc53513e1c1746446ff00424e39f0ba25441f76b3d68752b8c
+          publish:
+            nats_subjects:
+            - stream: dkg-stream
+              subject: dkg-engine.energy.integration
+          s3:
+            credentials:
+              access_key: minio
+              secret_key: minio123
+            endpoint: http://dkg-hl.dkg-engine.svc.cluster.local:9000
+            region: eu-central-1
+          subscribe:
+            nats_subjects:
+            - public_key: b2030d8df6c0a8bc53513e1c1746446ff00424e39f0ba25441f76b3d68752b8c
+              stream: dkg-stream
+              subject: dkg-engine.energy.validation
+        debug: =DEBUG
+        nodeSelector:
+          master: "true"
+        secretKey: "3366656464356265336466306662343365373332386165303834336338636231"
+        services:
+          health:
+            port: 8080
+          network:
+            nodePort: 31100
+            port: 9102
+          type: NodePort
+        tolerations:
+        - effect: NoSchedule
+          key: node-role.kubernetes.io/control-plane
+          operator: Equal
+    repoURL: https://HIRO-MicroDataCenters-BV.github.io/rhio/helm-charts/
+    targetRevision: 0.*.*
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true
+    - ServerSideApply=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  annotations:
+    argocd.argoproj.io/hook: Sync
+    argocd.argoproj.io/sync-wave: "-8"
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+  name: semantification-service
+  namespace: argocd
+spec:
+  destination:
+    namespace: semantification
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    chart: semantification-service
+    helm:
+      valuesObject:
+        ingressHostName: semantification.integration
+    repoURL: https://glaciation-heu.github.io/glaciation-semantification-service/helm-charts/
+    targetRevision: 0.*.*
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true
+    - ServerSideApply=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+  name: swarm-agent
+  namespace: argocd
+spec:
+  destination:
+    namespace: dkg-engine
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    chart: swarm-agent
+    helm:
+      valuesObject:
+        ingressHostName: swarm-agent.integration
+    repoURL: https://glaciation-heu.github.io/swarm-agent/helm-charts/
+    targetRevision: 0.*.*
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true
+    - ServerSideApply=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+  name: trade-off-service
+  namespace: argocd
+spec:
+  destination:
+    namespace: dkg-engine
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    chart: trade-off-service
+    helm:
+      valuesObject:
+        config:
+          metadata-service:
+            url: http://metadata-service/api/v0/graph?query={query}
+          prometheus:
+            url: http://monitoring-stack-prometheus-server.monitoring/api/v1/query?query={query}
+        ingressHostName: tradeoff.integration
+    repoURL: https://glaciation-heu.github.io/trade-off-service/helm-charts/
+    targetRevision: 1.*.*
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true
+    - ServerSideApply=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+  name: uc2-workload-service
+  namespace: argocd
+spec:
+  destination:
+    namespace: uc2
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    chart: uc2-workload
+    helm:
+      valuesObject:
+        ingressHostName: uc2-workload.integration
+    repoURL: https://glaciation-heu.github.io/glaciation-uc2-workload-service/helm-charts/
+    targetRevision: 0.*.*
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true
+    - ServerSideApply=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+  name: ui-gateway
+  namespace: argocd
+spec:
+  destination:
+    namespace: dkg-engine
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    chart: ui-gateway-server
+    repoURL: https://glaciation-heu.github.io/ui_gateway/helm-charts
+    targetRevision: 0.*.*
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true
+    - ServerSideApply=true
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: anomaly-detection-job
+  namespace: uc2
+spec:
+  template:
+    spec:
+      containers:
+      - args:
+        - --url
+        - http://metadata-service.dkg-engine.svc.cluster.local/api/v0/graph
+        command:
+        - python
+        - /app/workload_anomaly_detection.py
+        image: ghcr.io/glaciation-heu/dell-uc/workload-anomaly-detection:latest
+        imagePullPolicy: IfNotPresent
+        name: anomaly-detection
+        resources:
+          limits:
+            nvidia.com/gpu: "0"
+          requests:
+            cpu: "2"
+            ephemeral-storage: 500M
+            memory: 2Gi
+      nodeSelector:
+        kubernetes.io/hostname: glaciation-testm1w5-worker01
+      restartPolicy: Never
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: object-distribution-job
+  namespace: uc2
+spec:
+  template:
+    spec:
+      containers:
+      - args:
+        - --url
+        - http://metadata-service.dkg-engine.svc.cluster.local/api/v0/graph
+        command:
+        - python
+        - /app/workload_object_distribution.py
+        image: ghcr.io/glaciation-heu/dell-uc/workload_object_distribution:latest
+        imagePullPolicy: Always
+        name: object-distribution
+        resources:
+          limits:
+            nvidia.com/gpu: "0"
+          requests:
+            cpu: "2"
+            ephemeral-storage: 500M
+            memory: 2Gi
+      nodeSelector:
+        kubernetes.io/hostname: glaciation-testm1w5-worker01
+      restartPolicy: Never
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: operational-efficiency-job
+  namespace: uc2
+spec:
+  template:
+    spec:
+      containers:
+      - args:
+        - --url
+        - http://metadata-service.dkg-engine.svc.cluster.local/api/v0/graph
+        command:
+        - python
+        - workload_operational_efficiency.py
+        image: ghcr.io/glaciation-heu/dell-uc/workload_operational_efficiency:latest
+        imagePullPolicy: IfNotPresent
+        name: operational-efficiency
+        resources:
+          limits:
+            nvidia.com/gpu: "0"
+          requests:
+            cpu: "2"
+            ephemeral-storage: 500M
+            memory: 2Gi
+      nodeSelector:
+        kubernetes.io/hostname: glaciation-testm1w5-worker01
+      restartPolicy: Never
+---
+apiVersion: jetstream.nats.io/v1beta2
+kind: Stream
+metadata:
+  name: nats-stream
+  namespace: dkg-engine
+spec:
+  name: dkg-stream
+  replicas: 1
+  storage: file
+  subjects:
+  - dkg-engine.energy.validation
+  - dkg-engine.energy.integration
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress

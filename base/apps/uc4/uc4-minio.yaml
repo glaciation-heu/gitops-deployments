@@ -1,0 +1,72 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: uc4-minio
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/compare-options: ServerSideDiff=true
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  sources:
+  - repoURL: https://operator.min.io
+    chart: tenant
+    targetRevision: 5.0.14
+    helm:
+      valuesObject:
+        # Secret for configuring the root MinIO user
+        secrets:
+          name: uc4-minio-configuration
+          accessKey: minio
+          secretKey: minio123
+
+        tenant:
+          name: uc4
+          configuration:
+            name: uc4-minio-configuration
+          pools:
+            - name: uc4-pool
+              servers: 2
+              volumesPerServer: 2
+              size: 1Gi
+              storageClassName: local-path
+              resources:
+                requests:
+                  cpu: 1
+                  memory: 2Gi
+                limits:
+                  cpu: 2
+                  memory: 4Gi
+          certificate:
+            requestAutoCert: false
+          buckets:
+            - name: one
+            - name: two
+            - name: three
+        ingress:
+          api:
+            enabled: true
+            ingressClassName: "nginx"
+            annotations:
+              nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+            host: uc4-minio-api.integration
+            path: /
+            pathType: Prefix
+          console:
+            enabled: true
+            ingressClassName: "nginx"
+            annotations:
+              nginx.org/websocket-services: dkg-console
+            host: uc4-minio-console.integration
+            path: /
+            pathType: Prefix
+  destination:
+    namespace: uc4
+    server: https://kubernetes.default.svc
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - ServerSideApply=true

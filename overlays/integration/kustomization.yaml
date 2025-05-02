@@ -10,3 +10,4 @@ resources:
   - ./dell-uc2
   - ./dkg-engine
   - ./security
+  - ./uc4

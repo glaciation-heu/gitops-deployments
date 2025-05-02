@@ -3033,6 +3033,77 @@ spec:
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
+  annotations:
+    argocd.argoproj.io/compare-options: ServerSideDiff=true
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+  name: uc4-minio
+  namespace: argocd
+spec:
+  destination:
+    namespace: uc4
+    server: https://kubernetes.default.svc
+  project: default
+  sources:
+  - chart: tenant
+    helm:
+      valuesObject:
+        ingress:
+          api:
+            annotations:
+              nginx.ingress.kubernetes.io/backend-protocol: HTTPS
+            enabled: true
+            host: uc4-minio-api.integration
+            ingressClassName: nginx
+            path: /
+            pathType: Prefix
+          console:
+            annotations:
+              nginx.org/websocket-services: dkg-console
+            enabled: true
+            host: uc4-minio-console.integration
+            ingressClassName: nginx
+            path: /
+            pathType: Prefix
+        secrets:
+          accessKey: minio
+          name: uc4-minio-configuration
+          secretKey: minio123
+        tenant:
+          buckets:
+          - name: one
+          - name: two
+          - name: three
+          certificate:
+            requestAutoCert: false
+          configuration:
+            name: uc4-minio-configuration
+          name: uc4
+          pools:
+          - name: uc4-pool
+            resources:
+              limits:
+                cpu: 2
+                memory: 4Gi
+              requests:
+                cpu: 1
+                memory: 2Gi
+            servers: 2
+            size: 1Gi
+            storageClassName: local-path
+            volumesPerServer: 2
+    repoURL: https://operator.min.io
+    targetRevision: 5.0.14
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - ServerSideApply=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
   finalizers:
   - resources-finalizer.argocd.argoproj.io
   name: ui-gateway

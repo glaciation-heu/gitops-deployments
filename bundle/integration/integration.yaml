@@ -3059,9 +3059,9 @@ spec:
             pathType: Prefix
           console:
             annotations:
-              nginx.org/websocket-services: dkg-console
+              nginx.org/websocket-services: uc4-minio
             enabled: true
-            host: uc4-minio-console.integration
+            host: uc4-minio.integration
             ingressClassName: nginx
             path: /
             pathType: Prefix

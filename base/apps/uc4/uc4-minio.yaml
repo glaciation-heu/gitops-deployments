@@ -17,8 +17,7 @@ spec:
       valuesObject:
         secrets:
           name: uc4-minio-configuration
-          accessKey: minio
-          secretKey: minio123
+          existingSecret: true
         tenant:
           name: uc4
           configuration:

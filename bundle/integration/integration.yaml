@@ -3059,7 +3059,7 @@ spec:
             pathType: Prefix
           console:
             annotations:
-              nginx.org/websocket-services: uc4-minio
+              nginx.org/websocket-services: uc4-console
             enabled: true
             host: uc4-minio.integration
             ingressClassName: nginx

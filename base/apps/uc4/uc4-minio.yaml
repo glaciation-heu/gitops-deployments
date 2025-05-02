@@ -15,12 +15,10 @@ spec:
     targetRevision: 5.0.14
     helm:
       valuesObject:
-        # Secret for configuring the root MinIO user
         secrets:
           name: uc4-minio-configuration
           accessKey: minio
           secretKey: minio123
-
         tenant:
           name: uc4
           configuration:
@@ -59,7 +57,7 @@ spec:
             enabled: true
             ingressClassName: "nginx"
             annotations:
-              nginx.org/websocket-services: uc4-minio
+              nginx.org/websocket-services: "uc4-console"
             host: uc4-minio.integration
             path: /
             pathType: Prefix

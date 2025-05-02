@@ -41,9 +41,11 @@ spec:
           certificate:
             requestAutoCert: false
           buckets:
-            - name: one
-            - name: two
-            - name: three
+            - name: chunk
+            - name: data
+            - name: model
+            - name: out
+            - name: proc
         ingress:
           api:
             enabled: true

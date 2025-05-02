@@ -59,8 +59,8 @@ spec:
             enabled: true
             ingressClassName: "nginx"
             annotations:
-              nginx.org/websocket-services: dkg-console
-            host: uc4-minio-console.integration
+              nginx.org/websocket-services: uc4-minio
+            host: uc4-minio.integration
             path: /
             pathType: Prefix
   destination:

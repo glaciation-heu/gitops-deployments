@@ -3066,9 +3066,8 @@ spec:
             path: /
             pathType: Prefix
         secrets:
-          accessKey: minio
+          existingSecret: true
           name: uc4-minio-configuration
-          secretKey: minio123
         tenant:
           buckets:
           - name: chunk

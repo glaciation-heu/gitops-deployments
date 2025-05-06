@@ -24,7 +24,8 @@ A reference example of application repository is [glaciation-metadata-service](h
       ```
       $ kubectl apply -f "argocd-*.yaml" -n=argocd
       ```
-   3. Use *.yaml as App-of-Apps configurations.
+      3. Use *.yaml as App-of-Apps configurations. 
+      4. Manually create new secrete for UC4 MinIO Tenant.
 
 2. Install load balancer. Check [load-balancer](docs/load-balancer/load-balancer.md) for more details.
 

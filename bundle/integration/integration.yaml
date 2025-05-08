@@ -3140,7 +3140,7 @@ metadata:
   namespace: argocd
 spec:
   destination:
-    namespace: uc4
+    namespace: uc4-minio
     server: https://kubernetes.default.svc
   project: default
   sources:

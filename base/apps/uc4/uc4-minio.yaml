@@ -61,7 +61,7 @@ spec:
             path: /
             pathType: Prefix
   destination:
-    namespace: uc4
+    namespace: uc4-minio
     server: https://kubernetes.default.svc
   syncPolicy:
     automated:

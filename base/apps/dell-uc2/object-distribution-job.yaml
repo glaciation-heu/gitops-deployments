@@ -14,9 +14,13 @@ spec:
           requests:
             memory: "2Gi"
             cpu: "2"
-            ephemeral-storage: "500M"
+            ephemeral-storage: "1Gi"
+            nvidia.com/gpu: "0"
           limits:
-            nvidia.com/gpu: "0"                                                                                                                 
+            memory: "4Gi"
+            cpu: "3"
+            ephemeral-storage: "2Gi"
+            nvidia.com/gpu: "0"                                                                                                               
         command: ["python", "/app/workload_object_distribution.py"] 
         args: ["--url", "http://metadata-service.dkg-engine.svc.cluster.local/api/v0/graph"] 
       restartPolicy: Never

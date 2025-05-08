@@ -2329,7 +2329,106 @@ spec:
                 source: k8s-ephemeral-storage-metrics
                 subresource: Storage
                 unit: bytes
-              pod_queries: []
+              pod_queries:
+              - aggregation:
+                  function: average
+                  period_seconds: 300
+                measurement_id: Usage
+                property: Network.Usage
+                query: |
+                  label_join(
+                    sum(
+                      rate(
+                        container_network_receive_bytes_total[5m] @{{now}}
+                      )
+                    ) by (namespace, pod) +
+                    sum(
+                      rate(
+                        container_network_transmit_bytes_total[5m] @{{now}}
+                      )
+                    ) by (namespace, pod),
+                    "resource",
+                    ".",
+                    "namespace",
+                    "pod"
+                  )
+                result_parser: PROMETHEUS_PARSER
+                source: cAdvisor
+                subresource: Network
+                unit: bytes
+              - aggregation:
+                  function: average
+                  period_seconds: 300
+                measurement_id: Usage
+                property: Storage.Usage
+                query: |
+                  label_join(
+                    ephemeral_storage_pod_usage @{{now}},
+                    "resource",
+                    ".",
+                    "pod_namespace",
+                    "pod_name"
+                  )
+                result_parser: PROMETHEUS_PARSER
+                source: k8s-ephemeral-storage-metrics
+                subresource: Storage
+                unit: bytes
+              - aggregation:
+                  function: average
+                  period_seconds: 300
+                measurement_id: Usage
+                property: CPU.Usage
+                query: |
+                  label_join(
+                    sum(
+                      rate(
+                        container_cpu_usage_seconds_total[5m] @{{now}}
+                      )
+                    ) by (namespace, pod),
+                    "resource",
+                    ".",
+                    "namespace",
+                    "pod"
+                  )
+                result_parser: PROMETHEUS_PARSER
+                source: cAdvisor
+                subresource: CPU
+                unit: bytes
+              - measurement_id: Usage
+                property: RAM.Usage
+                query: |
+                  label_join(
+                    sum(
+                      rate(
+                        container_memory_working_set_bytes[5m] @{{now}}
+                      )
+                    ) by (namespace, pod),
+                    "resource",
+                    ".",
+                    "namespace",
+                    "pod"
+                  )
+                result_parser: PROMETHEUS_PARSER
+                source: cAdvisor
+                subresource: RAM
+                unit: bytes
+              - measurement_id: Energy.Usage
+                property: Energy.Usage
+                query: |
+                  label_join(
+                    sum(
+                      irate(
+                        kepler_container_joules_total[5m] @{{now}}
+                      )
+                    ) by (container_namespace, pod_name),
+                    "resource",
+                    ".",
+                    "container_namespace",
+                    "pod_name"
+                  )
+                result_parser: PROMETHEUS_PARSER
+                source: Kepler
+                unit: milliwatt
             single_slice_url: http://metadata-service:80
           k8s:
             in_cluster: true

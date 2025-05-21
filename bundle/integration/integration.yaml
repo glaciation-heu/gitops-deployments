@@ -3158,6 +3158,7 @@ spec:
             pathType: Prefix
           console:
             annotations:
+              nginx.org/client-max-body-size: "0"
               nginx.org/websocket-services: uc4-console
             enabled: true
             host: uc4-minio.integration

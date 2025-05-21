@@ -39,7 +39,7 @@ spec:
             requestAutoCert: false
           buckets:
             - name: chunk
-            - name: data
+            - name: scada
             - name: model
             - name: out
             - name: proc

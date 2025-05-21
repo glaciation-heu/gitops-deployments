@@ -3169,12 +3169,6 @@ spec:
           existingSecret: true
           name: uc4-minio-configuration
         tenant:
-          buckets:
-          - name: chunk
-          - name: scada
-          - name: model
-          - name: out
-          - name: proc
           certificate:
             requestAutoCert: false
           configuration:

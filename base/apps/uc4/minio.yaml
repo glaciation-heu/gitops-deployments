@@ -57,6 +57,7 @@ spec:
             ingressClassName: "nginx"
             annotations:
               nginx.org/websocket-services: "uc4-console"
+              nginx.org/client-max-body-size: "0"
             host: uc4-minio.integration
             path: /
             pathType: Prefix

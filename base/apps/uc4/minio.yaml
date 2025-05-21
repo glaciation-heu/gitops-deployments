@@ -37,12 +37,6 @@ spec:
                   memory: 4Gi
           certificate:
             requestAutoCert: false
-          buckets:
-            - name: chunk
-            - name: scada
-            - name: model
-            - name: out
-            - name: proc
         ingress:
           api:
             enabled: true

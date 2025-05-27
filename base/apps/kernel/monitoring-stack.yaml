@@ -118,6 +118,18 @@ spec:
               - source_labels: [__address__]
                 target_label: instance
                 replacement: http://jenkins.integration
+            - job_name: 'argocd'
+              kubernetes_sd_configs:
+              - role: endpoints
+              relabel_configs:
+              - source_labels: [__meta_kubernetes_namespace]
+                regex: 'argocd'            # <- change if Argo CD runs elsewhere
+                action: keep
+              - source_labels: [__meta_kubernetes_service_name]
+                regex: 'argocd(-.+)?-metrics'
+                action: keep
+              - source_labels: [__meta_kubernetes_service_name]
+                target_label: job
         telegraf:
           enabled: false
           resources:

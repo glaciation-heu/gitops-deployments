@@ -2699,7 +2699,12 @@ spec:
             job_name: 'jenkins'\n  metrics_path: '/prometheus'\n  static_configs:\n
             \ - targets:\n    - 'jenkins.jenkins.svc.cluster.local:8080'\n  relabel_configs:\n
             \ - source_labels: [__address__]\n    target_label: instance\n    replacement:
-            http://jenkins.integration\n"
+            http://jenkins.integration\n- job_name: 'argocd'\n  kubernetes_sd_configs:\n
+            \ - role: endpoints\n  relabel_configs:\n  - source_labels: [__meta_kubernetes_namespace]\n
+            \   regex: 'argocd'            # <- change if Argo CD runs elsewhere\n
+            \   action: keep\n  - source_labels: [__meta_kubernetes_service_name]\n
+            \   regex: 'argocd(-.+)?-metrics'\n    action: keep\n  - source_labels:
+            [__meta_kubernetes_service_name]\n    target_label: job\n"
           server:
             global:
               external_labels:

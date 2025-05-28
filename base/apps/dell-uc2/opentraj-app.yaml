@@ -6,7 +6,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: ghcr.io/your-org/opentraj-app
+    repoURL: ghcr.io/dell-uc2/opentraj-app
     targetRevision: latest
     chart: opentraj-app
   destination:
@@ -16,3 +16,5 @@ spec:
     automated:
       prune: true
       selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

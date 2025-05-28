@@ -1,0 +1,26 @@
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: opentraj
+  namespace: workload-namespace
+spec:
+  interval: 5m
+  chart:
+    spec:
+      chart: app
+      version: 0.1.0
+      sourceRef:
+        kind: HelmRepository
+        name: dell-uc2
+        namespace: workload-namespace
+  values:
+    image:
+      repository: ghcr.io/glaciation-heu/dell-uc2/opentraj-app
+      tag: latest
+    resources:
+      requests:
+        cpu: "500m"
+        memory: "1Gi"
+      limits:
+        cpu: "1000m"
+        memory: "2Gi"

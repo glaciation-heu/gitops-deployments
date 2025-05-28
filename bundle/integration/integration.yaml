@@ -3235,6 +3235,30 @@ kind: Application
 metadata:
   finalizers:
   - resources-finalizer.argocd.argoproj.io
+  name: uc4-workload
+  namespace: argocd
+spec:
+  destination:
+    namespace: uc4-workload
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    chart: uc4-workload
+    repoURL: https://glaciationIPTO.github.io/server_procs/helm-charts/
+    targetRevision: 1.*.*
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true
+    - ServerSideApply=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
   name: ui-gateway
   namespace: argocd
 spec:

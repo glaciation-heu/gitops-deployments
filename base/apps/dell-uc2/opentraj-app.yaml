@@ -1,0 +1,18 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: opentraj-app
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: ghcr.io/your-org/opentraj-app
+    targetRevision: latest
+    chart: opentraj-app
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: workload-namespace
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

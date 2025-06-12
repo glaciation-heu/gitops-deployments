@@ -3,4 +3,5 @@ kind: Kustomization
 resources:
   - minio.yaml
   - sealed-secrets.yaml
+  - shoalmate.yaml
   - workload.yaml

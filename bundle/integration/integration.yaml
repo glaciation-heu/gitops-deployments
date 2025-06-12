@@ -3235,6 +3235,30 @@ kind: Application
 metadata:
   finalizers:
   - resources-finalizer.argocd.argoproj.io
+  name: uc4-shoalmate
+  namespace: argocd
+spec:
+  destination:
+    namespace: uc4-shoalmate
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    chart: shoalmate
+    repoURL: https://glaciation-heu.github.io/glaciation-uc4-shoalmate/helm-charts/
+    targetRevision: 0.*.*
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true
+    - ServerSideApply=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
   name: uc4-workload
   namespace: argocd
 spec:

@@ -132,10 +132,3 @@ kubectl get ingress -A    # routes: argocd.$DOMAIN, api.$DOMAIN …
 #### 5.5.2 Basic Functional Tests Post-Deployment  
 
 ????????????
-
----
-
-### Appendices  
-
-* **Load-balancer quick-start** – minimal nginx reverse-proxy for PoCs.  
-* **DNS/VPN debugging** – `nslookup` tips for off-VPN troubleshooting.  

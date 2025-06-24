@@ -27,7 +27,7 @@
 
 ```bash
 # Apply required manual manifests
-kubectl apply -k base/base/manual
+kubectl apply -k base/apps/base/manual
 kubectl apply -f integration-cluster.yaml
 ```
 
@@ -36,8 +36,8 @@ kubectl apply -f integration-cluster.yaml
 
 ```bash
 # Control-plane add-ons (CRDs, RBAC, cert-manager, ingress-nginx …)
-kubectl apply -k base/base/manual
-kubectl apply -k base/base
+kubectl apply -k base/apps/base/manual
+kubectl apply -k base/apps/base
 kubectl apply -k overlays/$ENV/base
 ```
 
@@ -52,7 +52,7 @@ kubectl get pods -n dkg-engine
 #### 5.2.2 Kernel Deployment  
 
 ```bash
-kubectl apply -k base/kernel
+kubectl apply -k base/apps/base/kernel
 kubectl apply -k overlays/$ENV/kernel
 ```
 
@@ -64,7 +64,7 @@ kubectl get pods -n kube-system
 #### 5.2.3 DKG & Micro-services Deployment  
 
 ```bash
-kubectl apply -k base/dkg-engine
+kubectl apply -k base/apps/base/dkg-engine
 kubectl apply -k overlays/$ENV/dkg-engine
 ```
 Creates the Distributed Knowledge Graph, Postgres backend, and edge APIs.
@@ -72,7 +72,7 @@ Creates the Distributed Knowledge Graph, Postgres backend, and edge APIs.
 #### 5.2.4 AI Engine Deployment  
 
 ```bash
-kubectl apply -k base/ai-decision-engine
+kubectl apply -k base/apps/base/ai-decision-engine
 kubectl apply -k overlays/$ENV/ai-decision-engine
 ```
 Installs Decision Engine, Inference Serving, Trade-Off Service.
@@ -84,7 +84,7 @@ Installs Decision Engine, Inference Serving, Trade-Off Service.
 #### 5.2.6 Protection Techniques Module Deployment  
 
 ```bash
-kubectl apply -k base/security
+kubectl apply -k base/apps/base/security
 kubectl apply -k overlays/$ENV/security
 ```
 
@@ -135,3 +135,7 @@ kubectl get ingress -A    # routes: argocd.$DOMAIN, api.$DOMAIN …
 
 ---
 
+### Appendices  
+
+* **Load-balancer quick-start** – minimal nginx reverse-proxy for PoCs.  
+* **DNS/VPN debugging** – `nslookup` tips for off-VPN troubleshooting.  

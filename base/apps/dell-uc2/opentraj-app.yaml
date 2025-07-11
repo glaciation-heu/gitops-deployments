@@ -6,9 +6,9 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: ghcr.io/dell-uc2/opentraj-app
-    targetRevision: latest
-    chart: opentraj-app
+    repoURL: https://glaciation-heu.github.io/opentraj-app-chart-repo  # Need to check Helm chart repo URL
+    targetRevision: 0.1.0   
+    chart: opentraj-app     # Need to check Helm chart name in the repo
   destination:
     server: https://kubernetes.default.svc
     namespace: workload-namespace

@@ -3244,6 +3244,9 @@ spec:
   project: default
   source:
     chart: shoalmate
+    helm:
+      valuesObject:
+        ingressHostName: uc4-shoalmate.integration
     repoURL: https://glaciation-heu.github.io/glaciation-uc4-shoalmate/helm-charts/
     targetRevision: 0.*.*
   syncPolicy:

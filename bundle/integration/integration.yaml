@@ -3137,6 +3137,33 @@ spec:
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+  name: uc3-workload-service
+  namespace: argocd
+spec:
+  destination:
+    namespace: uc3
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    chart: secure-collab-comp
+    helm:
+      valuesObject:
+        ingressHostName: uc3-workload.integration
+    repoURL: https://glaciation-heu.github.io/SAP-UC3/helm-charts/
+    targetRevision: 0.*.*
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true
+    - ServerSideApply=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
   annotations:
     argocd.argoproj.io/compare-options: ServerSideDiff=true
   finalizers:

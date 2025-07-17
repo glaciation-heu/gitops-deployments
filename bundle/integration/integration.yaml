@@ -3151,7 +3151,7 @@ spec:
     helm:
       valuesObject:
         ingressHostName: uc3-workload.integration
-    repoURL: https://glaciation-heu.github.io/SAP-UC3/helm-charts/
+    repoURL: https://glaciation-heu.github.io/sap-uc3
     targetRevision: 0.*.*
   syncPolicy:
     automated:

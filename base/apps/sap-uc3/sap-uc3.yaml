@@ -11,7 +11,7 @@ spec:
     server: https://kubernetes.default.svc
   project: default
   source:
-    repoURL: https://glaciation-heu.github.io/SAP-UC3/helm-charts/
+    repoURL: https://glaciation-heu.github.io/sap-uc3
     chart: secure-collab-comp
     targetRevision: 0.*.*
     helm:

@@ -51,6 +51,9 @@ spec:
     helm:
       valuesObject:
         loki-stack:
-          gateway:
+          loki:
             ingress:
-              host: loki.integration
+              hosts:
+                - host: loki.validation
+                  paths:
+                    - /

@@ -181,7 +181,7 @@ spec:
                 - host: loki.integration
                   paths:
                     - /
-              ingressClassName: nginxn
+              ingressClassName: nginx
 
         grafana:
           adminPassword: donkeyhot

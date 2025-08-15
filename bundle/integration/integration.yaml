@@ -2618,6 +2618,12 @@ spec:
                   stream: kube-events
                 url: http://monitoring-stack-loki:3100/loki/api/v1/push
               name: loki
+        loki-stack:
+          gateway:
+            ingress:
+              enabled: true
+              host: loki.integration
+              ingressClassName: nginx
         prometheus:
           extraScrapeConfigs: "- job_name: 'prometheus-node-exporter'\n  kubernetes_sd_configs:\n
             \   - role: endpoints\n  relabel_configs:\n  - source_labels: [__meta_kubernetes_endpoints_name]\n

@@ -2670,7 +2670,7 @@ spec:
               - host: loki.validation
                 paths:
                 - /
-              ingressClassName: nginxn
+              ingressClassName: nginx
         prometheus:
           extraScrapeConfigs: "- job_name: 'prometheus-node-exporter'\n  kubernetes_sd_configs:\n
             \   - role: endpoints\n  relabel_configs:\n  - source_labels: [__meta_kubernetes_endpoints_name]\n

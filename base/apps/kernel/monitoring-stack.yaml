@@ -173,6 +173,16 @@ spec:
                   stream: kube-events
                 url: http://monitoring-stack-loki:3100/loki/api/v1/push
 
+        loki-stack:
+          loki:
+            ingress:
+              enabled: true
+              hosts:
+                - host: loki.integration
+                  paths:
+                    - /
+              ingressClassName: nginx
+
         grafana:
           adminPassword: donkeyhot
           ingress:

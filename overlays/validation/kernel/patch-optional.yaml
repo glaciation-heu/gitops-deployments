@@ -39,3 +39,21 @@ spec:
             global:
               external_labels:
                 cluster: validation
+
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: monitoring-stack
+  namespace: argocd
+spec:
+  source:
+    helm:
+      valuesObject:
+        loki-stack:
+          loki:
+            ingress:
+              hosts:
+                - host: loki.validation
+                  paths:
+                    - /

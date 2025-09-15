@@ -12,7 +12,7 @@ spec:
   project: default
   source:
     repoURL: https://glaciation-heu.github.io/sap-uc3
-    chart: secure-collab-comp
+    chart: secure-collab-computation
     targetRevision: 0.*.*
     helm:
       valuesObject:

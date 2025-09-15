@@ -3156,7 +3156,7 @@ spec:
     server: https://kubernetes.default.svc
   project: default
   source:
-    chart: secure-collab-comp
+    chart: secure-collab-computation
     helm:
       valuesObject:
         ingressHostName: uc3-workload.integration

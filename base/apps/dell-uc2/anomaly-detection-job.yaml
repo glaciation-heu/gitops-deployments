@@ -3,6 +3,20 @@ kind: Job
 metadata:
   name: anomaly-detection-job
   namespace: uc2
+  annotations:
+    glaciation-project.eu/cpu-allocated: "2"
+    glaciation-project.eu/cpu-demanded: "1"
+    glaciation-project.eu/cpu-used: "1.5"
+    glaciation-project.eu/memory-allocated: "2147483648"
+    glaciation-project.eu/memory-unit: "glc:Bytes"
+    glaciation-project.eu/energy-allocated: "100"
+    glaciation-project.eu/energy-demanded: "60"
+    glaciation-project.eu/energy-used: "50"
+    glaciation-project.eu/network-allocated: "500"
+    glaciation-project.eu/network-used: "320"
+    glaciation-project.eu/storage-allocated: "500000000"
+    glaciation-project.eu/storage-used: "410000000"
+    glaciation-project.eu/storage-unit: "glc:Bytes"
 spec:
   template:
     spec:
@@ -14,7 +28,7 @@ spec:
           requests:
             memory: "2Gi"
             cpu: "2"
-            ephemeral-storage: "500M"
+            ephemeral-storage: "500Mi"
           limits:
             nvidia.com/gpu: "0"                                                                                                                 
         command: ["python", "/app/workload_anomaly_detection.py"]
